@@ -1,15 +1,19 @@
 package com.remondis.jbeanviews.api;
 
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
-public class BeanViewAttributeBuilder<S, O, E extends Exception, V> {
+public class BeanViewAttributeBuilder<S, O, V> {
 
   private BeanViewBuilder<S, V> beanViewBuilder;
-  private BiFunction<O, V, E> sourceAttribute;
+  private Function<V, O> viewAttribute;
 
-  BeanViewAttributeBuilder(BeanViewBuilder<S, V> beanViewBuilder, BiFunction<O, V, E> sourceAttribute) {
+  BeanViewAttributeBuilder(BeanViewBuilder<S, V> beanViewBuilder, Function<V, O> viewAttribute) {
     this.beanViewBuilder = beanViewBuilder;
-    this.sourceAttribute = sourceAttribute;
+    this.viewAttribute = viewAttribute;
+  }
+
+  public BeanViewBuilder<S, V> to(Function<S, O> viewAttribute) {
+    return beanViewBuilder;
   }
 
 }

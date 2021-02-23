@@ -3,7 +3,6 @@ package com.remondis.jbeanviews.api;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.remondis.jbeanviews.api.TypeConversion.TypeMappingBuilder;
@@ -36,8 +35,8 @@ public class BeanViewBuilder<S, V> {
     return this;
   }
 
-  public <O, E extends Exception> BeanViewAttributeBuilder<S, O, E, V> bind(BiFunction<O, V, E> sourceAttribute) {
-    return new BeanViewAttributeBuilder<S, O, E, V>(this, sourceAttribute);
+  public <O> BeanViewAttributeBuilder<S, O, V> bind(Function<V, O> viewAttribute) {
+    return new BeanViewAttributeBuilder<S, O, V>(this, viewAttribute);
   }
 
   /**
