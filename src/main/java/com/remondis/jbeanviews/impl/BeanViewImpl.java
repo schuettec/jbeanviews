@@ -1,5 +1,6 @@
 package com.remondis.jbeanviews.impl;
 
+import static com.remondis.jbeanviews.impl.BeanViewException.ambiguousBindingForProperties;
 import static com.remondis.jbeanviews.impl.BeanViewException.noSourcePropertyFor;
 import static com.remondis.jbeanviews.impl.BeanViewException.noTypeConversion;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.appendPath;
@@ -18,7 +19,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -67,7 +67,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
               .getPropertyType();
           String viewPropertyName = viewProperty.getPropertyName();
           // Find matching source property
-          Optional<TransitiveProperty> matching = sourceProperties.values()
+          Set<TransitiveProperty> candidates = sourceProperties.values()
               .stream()
               .filter(sourceTp -> {
                 String sourcePropertyName = sourceTp.getPropertyName();
@@ -82,12 +82,16 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
                 // or a type conversion is available
                 typeConversions.containsKey(new TypeConversionKey<>(sourcePropertyType, viewPropertyType)));
               })
-              .findFirst();
-          if (matching.isEmpty()) {
+              .collect(Collectors.toSet());
+          if (candidates.isEmpty()) {
             throw noSourcePropertyFor(viewProperty,
                 getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
+          } else if (candidates.size() > 1) {
+            throw ambiguousBindingForProperties(viewProperty,
+                getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
           } else {
-            TransitiveProperty sourceProperty = matching.get();
+            TransitiveProperty sourceProperty = candidates.iterator()
+                .next();
             return new ViewBindingImpl(this, viewProperty, sourceProperty);
           }
         })

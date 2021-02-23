@@ -39,6 +39,12 @@ public class BeanViewException extends RuntimeException {
             : "Candidates for source properties are:\n" + possibleCandidates));
   }
 
+  static BeanViewException ambiguousBindingForProperties(TransitiveProperty viewProperty, String possibleCandidates) {
+    return new BeanViewException("Found multiple source properties candidates for:\n\t" + viewProperty.toString(true)
+        + "\n\tPlease specify an explicit binding to a source property for this view property.\n"
+        + "Candidates for source properties are:\n" + possibleCandidates);
+  }
+
   static BeanViewException reflectiveMethodInvocation(Method method, Exception e) {
     return new BeanViewException("Could not invoke method " + method.toGenericString() + " due to exception.", e);
   }
