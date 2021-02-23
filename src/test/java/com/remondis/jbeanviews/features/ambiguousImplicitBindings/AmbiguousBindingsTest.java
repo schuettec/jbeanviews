@@ -11,7 +11,7 @@ public class AmbiguousBindingsTest {
   public void shouldHandleAmbiguousBindings() {
     BeanView<Source, AmbiguousView> ambiguousView = BeanViews.of(Source.class)
         .toView(AmbiguousView.class)
-        .bind(AmbiguousView::getForename)
+        // .bind(AmbiguousView::getForename)
         .get();
     System.out.println(ambiguousView);
   }
