@@ -1,4 +1,4 @@
-package com.remondis.jbeanviews.test.data;
+package com.remondis.jbeanviews.test.data.leafTypes;
 
 import java.util.Arrays;
 

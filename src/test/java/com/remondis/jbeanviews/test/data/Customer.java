@@ -2,71 +2,62 @@ package com.remondis.jbeanviews.test.data;
 
 import java.util.List;
 
+import com.remondis.jbeanviews.test.data.leafTypes.Address;
+import com.remondis.jbeanviews.test.data.leafTypes.Person;
+import com.remondis.jbeanviews.test.data.leafTypes.Type;
+
 public class Customer {
-  private Person person;
-  private Type type;
-  private List<Address> addresses;
+	private Person person;
+	private Type type;
+	private List<Address> addresses;
 
-  private String number;
-  private boolean deleted;
+	private String number;
+	private boolean deleted;
 
-  public Customer(Person person, Type type, List<Address> addresses, String number, boolean deleted) {
-    super();
-    this.person = person;
-    this.type = type;
-    this.addresses = addresses;
-    this.number = number;
-    this.deleted = deleted;
-  }
+	public String getNumber() {
+		return number;
+	}
 
-  public Customer() {
-    super();
-  }
+	public void setNumber(String number) {
+		this.number = number;
+	}
 
-  public String getNumber() {
-    return number;
-  }
+	public boolean isDeleted() {
+		return deleted;
+	}
 
-  public void setNumber(String number) {
-    this.number = number;
-  }
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
 
-  public boolean isDeleted() {
-    return deleted;
-  }
+	public Person getPerson() {
+		return person;
+	}
 
-  public void setDeleted(boolean deleted) {
-    this.deleted = deleted;
-  }
+	public void setPerson(Person person) {
+		this.person = person;
+	}
 
-  public Person getPerson() {
-    return person;
-  }
+	public List<Address> getAddresses() {
+		return addresses;
+	}
 
-  public void setPerson(Person person) {
-    this.person = person;
-  }
+	public void setAddresses(List<Address> addresses) {
+		this.addresses = addresses;
+	}
 
-  public List<Address> getAddresses() {
-    return addresses;
-  }
+	public Type getType() {
+		return type;
+	}
 
-  public void setAddresses(List<Address> addresses) {
-    this.addresses = addresses;
-  }
+	public void setType(Type type) {
+		this.type = type;
+	}
 
-  public Type getType() {
-    return type;
-  }
-
-  public void setType(Type type) {
-    this.type = type;
-  }
-
-  @Override
-  public String toString() {
-    return "Customer [person=" + person + ", type=" + type + ", addresses=" + addresses + ", number=" + number
-        + ", deleted=" + deleted + "]";
-  }
+	@Override
+	public String toString() {
+		return "Customer [person=" + person + ", type=" + type + ", addresses=" + addresses + ", number=" + number
+				+ ", deleted=" + deleted + "]";
+	}
 
 }
