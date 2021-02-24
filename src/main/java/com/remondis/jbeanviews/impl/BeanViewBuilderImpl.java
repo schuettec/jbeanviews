@@ -57,4 +57,12 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     return new BeanViewImpl<>(sourceType, viewType, typeConversions);
   }
 
+  Class<S> getSourceType() {
+    return sourceType;
+  }
+
+  Class<V> getViewType() {
+    return viewType;
+  }
+
 }

@@ -250,9 +250,8 @@ public class InvocationSensor<T> {
    * @param selector
    *        The selector lambda.
    * @return Returns the {@link PropertyDescriptor} selected by the lambda.
-   * @throws ZeroInteractionException Thrown if no interaction was tracked by the field selector.
-   * @throws ExceptionInPropertyPath Thrown if a property path fails with an exception.
-   * @throws NotAValidPropertyPathException Thrown if the property path contains illegal calls to unsupported methods.
+   * @throws BeanViewException Thrown if no interaction was tracked by the field selector, if a property path fails with
+   *         an exception or if the property path contains illegal calls to unsupported methods.
    */
   public static <R, T> TypedTransitiveProperty<T, R> getTransitiveTypedProperty(Class<T> sensorType,
       PropertyPath<R, T> selector) throws BeanViewException {

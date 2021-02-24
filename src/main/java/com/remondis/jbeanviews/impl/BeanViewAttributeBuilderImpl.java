@@ -6,16 +6,21 @@ import com.remondis.jbeanviews.api.PropertyPath;
 
 public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeBuilder<S, O, V> {
 
-  private BeanViewBuilder<S, V> beanViewBuilder;
-  private TypedTransitiveProperty<V, O> transitiveTypedProperty;
+  private BeanViewBuilderImpl<S, V> beanViewBuilder;
+  private TypedTransitiveProperty<V, O> viewProperty;
 
-  BeanViewAttributeBuilderImpl(BeanViewBuilderImpl<S, V> beanViewBuilder,
-      TypedTransitiveProperty<V, O> transitiveTypedProperty) {
+  BeanViewAttributeBuilderImpl(BeanViewBuilderImpl<S, V> beanViewBuilder, TypedTransitiveProperty<V, O> viewProperty) {
     this.beanViewBuilder = beanViewBuilder;
+    this.viewProperty = viewProperty;
   }
 
   @Override
   public <OO> BeanViewBuilder<S, V> to(PropertyPath<OO, S> sourceAttribute) {
+    TypedTransitiveProperty<S, OO> sourceProperty = InvocationSensor
+        .getTransitiveTypedProperty(beanViewBuilder.getSourceType(), sourceAttribute);
+
+    // TODO: Add simple binding
+    // TODO: Extend API to add binding with a) unidirectional transformation b) bidirectional transformation.
     return beanViewBuilder;
   }
 }
