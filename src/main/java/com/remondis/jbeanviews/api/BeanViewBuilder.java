@@ -35,7 +35,7 @@ public class BeanViewBuilder<S, V> {
     return this;
   }
 
-  public <O> BeanViewAttributeBuilder<S, O, V> bind(Function<V, O> viewAttribute) {
+  public <O> BeanViewAttributeBuilder<S, O, V> bind(PropertyPath<O, V> viewAttribute) {
     return new BeanViewAttributeBuilder<S, O, V>(this, viewAttribute);
   }
 
