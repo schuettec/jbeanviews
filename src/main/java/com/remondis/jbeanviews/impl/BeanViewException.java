@@ -1,5 +1,6 @@
 package com.remondis.jbeanviews.impl;
 
+import static com.remondis.jbeanviews.impl.InvocationSensor.Invocation.invocationsToString;
 import static com.remondis.jbeanviews.impl.Properties.asString;
 
 import java.beans.PropertyDescriptor;
@@ -7,7 +8,30 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
+import com.remondis.jbeanviews.impl.InvocationSensor.Invocation;
+
 public class BeanViewException extends RuntimeException {
+
+  static class NotAValidPropertyPathException extends RuntimeException {
+
+    private NotAValidPropertyPathException() {
+      super();
+    }
+
+    private NotAValidPropertyPathException(String message) {
+      super(message);
+    }
+
+    static NotAValidPropertyPathException notAValidPropertyPath(Class<?> sensorType,
+        List<Invocation> trackedInvocations) {
+      String string = new StringBuilder("The tracked invocations do not select a valid property path: ")
+          .append(sensorType.getName())
+          .append(".")
+          .append(invocationsToString(trackedInvocations))
+          .toString();
+      return new NotAValidPropertyPathException(string);
+    }
+  }
 
   private BeanViewException() {
   }
@@ -26,6 +50,45 @@ public class BeanViewException extends RuntimeException {
 
   private BeanViewException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
+  }
+
+  static BeanViewException incompatibleCollectionMapping(PropertyDescriptor sourceProperty,
+      GenericParameterContext sourceCtx, PropertyDescriptor destinationProperty, GenericParameterContext destCtx) {
+    GenericParameterContext rootSrcCtx = new GenericParameterContext(sourceProperty.getReadMethod());
+    GenericParameterContext rootDestCtx = new GenericParameterContext(destinationProperty.getReadMethod());
+    StringBuilder builder = new StringBuilder("Incompatible nested collections found mapping\n\t");
+    builder.append(asString(sourceProperty))
+        .append(" to ~>\n\t")
+        .append(asString(destinationProperty))
+        .append("\nCannot map ")
+        .append(sourceCtx.getCurrentType()
+            .getSimpleName())
+        .append(" to ")
+        .append(destCtx.getCurrentType()
+            .getSimpleName())
+        .append(".\n")
+        .append("Use replace for manual mapping!\n")
+        .append("\nType nesting is\n\t")
+        .append("-> in source type: ")
+        .append("\n\t")
+        .append(rootSrcCtx.get()
+            .toString())
+        .append("\n\t-> in destination type: ")
+        .append("\n\t")
+        .append(rootDestCtx.get()
+            .toString())
+        .append("\n\tcannot map \n\t")
+        .append(sourceCtx.get()
+            .toString())
+        .append("\n\tto\n\t")
+        .append(destCtx.get()
+            .toString());
+    return new BeanViewException(builder.toString());
+  }
+
+  static BeanViewException exceptionInPropertyPath(Class<?> sensorType, Exception exception) {
+    return new BeanViewException(String.format("Property path on type '%s' threw an exception.", sensorType.getName()),
+        exception);
   }
 
   static BeanViewException propertyIntrospection(Class<?> inspectType, Exception cause) {
@@ -93,38 +156,25 @@ public class BeanViewException extends RuntimeException {
     return exception;
   }
 
-  static BeanViewException incompatibleCollectionMapping(PropertyDescriptor sourceProperty,
-      GenericParameterContext sourceCtx, PropertyDescriptor destinationProperty, GenericParameterContext destCtx) {
-    GenericParameterContext rootSrcCtx = new GenericParameterContext(sourceProperty.getReadMethod());
-    GenericParameterContext rootDestCtx = new GenericParameterContext(destinationProperty.getReadMethod());
-    StringBuilder builder = new StringBuilder("Incompatible nested collections found mapping\n\t");
-    builder.append(asString(sourceProperty))
-        .append(" to ~>\n\t")
-        .append(asString(destinationProperty))
-        .append("\nCannot map ")
-        .append(sourceCtx.getCurrentType()
-            .getSimpleName())
-        .append(" to ")
-        .append(destCtx.getCurrentType()
-            .getSimpleName())
-        .append(".\n")
-        .append("Use replace for manual mapping!\n")
-        .append("\nType nesting is\n\t")
-        .append("-> in source type: ")
-        .append("\n\t")
-        .append(rootSrcCtx.get()
-            .toString())
-        .append("\n\t-> in destination type: ")
-        .append("\n\t")
-        .append(rootDestCtx.get()
-            .toString())
-        .append("\n\tcannot map \n\t")
-        .append(sourceCtx.get()
-            .toString())
-        .append("\n\tto\n\t")
-        .append(destCtx.get()
-            .toString());
-    return new BeanViewException(builder.toString());
+  static BeanViewException noReturnTypeOnGetter(Method method) {
+    return new BeanViewException(
+        String.format("The method '%s' in type '%s' is not a valid getter because it has no return type.",
+            method.getName(), method.getDeclaringClass()
+                .getName()));
+  }
+
+  static BeanViewException zeroInteractions(Class<?> sensorType) {
+    return new BeanViewException(String
+        .format("There were zero interactions with the property selector applied on type %s.", sensorType.getName()));
+  }
+
+  static BeanViewException accessError(Class<?> sensorType, List<Invocation> invocations, Throwable e) {
+    StringBuilder b = new StringBuilder("Error while accessing a property '").append(sensorType.getName())
+        .append("' with the following property path: ")
+        .append(sensorType.getSimpleName())
+        .append(".")
+        .append(Invocation.invocationsToString(invocations));
+    return new BeanViewException(b.toString(), e);
   }
 
 }
