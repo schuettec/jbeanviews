@@ -29,6 +29,7 @@ import com.remondis.jbeanviews.api.BeanViews;
 import com.remondis.jbeanviews.api.TypeConversion;
 import com.remondis.jbeanviews.api.TypeConversionKey;
 import com.remondis.jbeanviews.api.ViewBinding;
+import com.remondis.jbeanviews.impl.BeanViewBuilderImpl.ViewBindingDeclaration;
 
 public class BeanViewImpl<S, V> implements BeanView<S, V> {
 
@@ -39,16 +40,24 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
 
   private Map<String, ViewBinding> viewBindings = new Hashtable();
 
-  public BeanViewImpl(Class<S> sourceType, Class<V> viewType, Set<TypeConversion> typeConversions) {
+  public BeanViewImpl(Class<S> sourceType, Class<V> viewType, Set<TypeConversion> typeConversions,
+      Set<ViewBindingDeclaration> viewBindings) {
     this.sourceType = sourceType;
     this.viewType = viewType;
     typeConversions.stream()
         .forEach(typeConversion -> this.typeConversions.put(typeConversion.getTypeConversionKey(), typeConversion));
-    buildBindings();
-    validateBindings();
+    createExplicitViewBindings(viewBindings);
+    createImplicitViewBindings();
+    validateViewBindings();
   }
 
-  private void buildBindings() {
+  private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
+    BeanViewImpl dis = this;
+    viewBindings.stream()
+        .map(declaration -> new ViewBindingImpl(dis, declaration.getViewProperty(), declaration.getSourceProperty()));
+  }
+
+  private void createImplicitViewBindings() {
 
     // Build type map for source
     Map<String, TransitiveProperty> viewProperties = getPropertiesRecursively(viewType, viewType, null,
@@ -200,7 +209,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
         .applying(beanView::toView, beanView::toSource));
   }
 
-  private void validateBindings() {
+  private void validateViewBindings() {
     final List<BeanViewException> exceptions = new LinkedList<>();
     viewBindings.values()
         .stream()

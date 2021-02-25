@@ -6,7 +6,7 @@ import static com.remondis.jbeanviews.impl.BeanViewException.NotAValidPropertyPa
 import static com.remondis.jbeanviews.impl.ReflectionUtil.denyNoReturnType;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.findGenericTypeFromMethod;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isBean;
-import static com.remondis.jbeanviews.impl.ReflectionUtil.isGetterWithArgumentSupport;
+import static com.remondis.jbeanviews.impl.ReflectionUtil.isGetter;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isList;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isMap;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.nullOrDefaultValue;
@@ -145,7 +145,7 @@ public class InvocationSensor<T> {
       @Override
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Invocation invocation = new Invocation(method, args);
-        if (isGetterWithArgumentSupport(method)) {
+        if (ReflectionUtil.isGetter(method)) {
           denyNoReturnType(method);
           // schuettec - Get property name from method and mark this property as called.
           invocations.add(invocation);
@@ -183,7 +183,7 @@ public class InvocationSensor<T> {
       @Override
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Invocation invocation = new Invocation(method, genericType, args);
-        if (isGetterWithArgumentSupport(method)) {
+        if (isGetter(method)) {
           denyNoReturnType(method);
           // schuettec - Get property name from method and mark this property as called.
           invocations.add(invocation);
@@ -253,21 +253,20 @@ public class InvocationSensor<T> {
    * @throws BeanViewException Thrown if no interaction was tracked by the field selector, if a property path fails with
    *         an exception or if the property path contains illegal calls to unsupported methods.
    */
-  public static <R, T> TypedTransitiveProperty<T, R> getTransitiveTypedProperty(Class<T> sensorType,
-      PropertyPath<R, T> selector) throws BeanViewException {
+  public static <R, T> TransitiveProperty getTransitiveTypedProperty(Class<T> sensorType, PropertyPath<R, T> selector)
+      throws BeanViewException {
     InvocationSensor<T> invocationSensor = new InvocationSensor<T>(sensorType);
     T sensor = invocationSensor.getSensor(true);
     // perform the selector lambda on the sensor
     try {
       R returnValue = selector.selectProperty(sensor);
-
       // if any property interaction was tracked...
       if (invocationSensor.hasTrackedInvocations()) {
         // ...make sure it was exactly one property interaction
         List<Invocation> trackedInvocations = invocationSensor.getTrackedInvocations();
         // Transitively check the tracked invocation and validate if they select a valid
         // property path.
-        return TypedTransitiveProperty.of(sensorType, returnValue, trackedInvocations);
+        return TransitiveProperty.ofInvocations(sensorType, trackedInvocations);
       } else {
         throw zeroInteractions(sensorType);
       }

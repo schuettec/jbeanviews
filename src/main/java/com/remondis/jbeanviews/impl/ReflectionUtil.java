@@ -303,6 +303,21 @@ class ReflectionUtil {
     return validName && hasReturnType;
   }
 
+  static boolean isGetter(Method method) {
+    boolean isBool = isBoolGetter(method);
+    boolean validName = (isBool ? method.getName()
+        .startsWith(IS)
+        : method.getName()
+            .startsWith(GET));
+    boolean hasArguments = hasArguments(method);
+    boolean hasReturnType = hasReturnType(method);
+    return validName && hasReturnType && !hasArguments;
+  }
+
+  static boolean hasArguments(Method method) {
+    return method.getParameterCount() != 0;
+  }
+
   static boolean isBoolGetter(Method method) {
     return isBool(method.getReturnType());
   }

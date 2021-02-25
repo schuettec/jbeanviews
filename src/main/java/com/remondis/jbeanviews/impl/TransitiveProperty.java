@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.remondis.jbeanviews.impl.InvocationSensor.Invocation;
+
 class TransitiveProperty {
 
   private Class<?> rootType;
@@ -25,6 +27,10 @@ class TransitiveProperty {
 
   TransitiveProperty() {
     super();
+  }
+
+  static TransitiveProperty ofInvocations(Class<?> rootType, List<Invocation> invocations) {
+    return null;
   }
 
   public Object get(Object source) {
