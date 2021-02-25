@@ -1,10 +1,10 @@
 package com.remondis.jbeanviews.impl;
 
 import static com.remondis.jbeanviews.impl.BeanViewException.exceptionInPropertyPath;
-import static com.remondis.jbeanviews.impl.BeanViewException.propertyPathOverListsNotAllowed;
 import static com.remondis.jbeanviews.impl.BeanViewException.propertyResolveError;
 import static com.remondis.jbeanviews.impl.BeanViewException.zeroInteractions;
 import static com.remondis.jbeanviews.impl.BeanViewException.NotAValidPropertyPathException.notAValidPropertyPath;
+import static com.remondis.jbeanviews.impl.BeanViewException.NotAValidPropertyPathException.propertyPathOverListsNotAllowed;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.denyNoReturnType;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isBean;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isCollection;
@@ -51,6 +51,12 @@ public class InvocationSensor<T> {
     enhancer.setCallback(new InvocationHandler() {
       @Override
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (nonNull(transitiveProperty)) {
+          Class<?> currentPropertyType = transitiveProperty.getPropertyType();
+          if (isMap(currentPropertyType) || isCollection(currentPropertyType)) {
+            throw propertyPathOverListsNotAllowed(transitiveProperty, method);
+          }
+        }
         if (isGetter(method)) {
           denyNoReturnType(method);
           PropertyDescriptor property = resolveProperty(method);
@@ -60,9 +66,7 @@ public class InvocationSensor<T> {
           transitiveProperty.add(property);
           // schuettec - For getter, return a new enhancer
           Class<?> returnType = method.getReturnType();
-          if (isMap(returnType) || isCollection(returnType)) {
-            throw propertyPathOverListsNotAllowed(transitiveProperty, method);
-          } else if (isBean(returnType)) {
+          if (isBean(returnType) || isMap(returnType) || isCollection(returnType)) {
             Enhancer enhancer = createProxyObject(returnType);
             return returnType.cast(enhancer.create());
           } else {
@@ -74,6 +78,7 @@ public class InvocationSensor<T> {
       }
     });
     return enhancer;
+
   }
 
   private PropertyDescriptor resolveProperty(Method method) {

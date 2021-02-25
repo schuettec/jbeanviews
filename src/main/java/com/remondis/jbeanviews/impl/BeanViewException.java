@@ -25,6 +25,14 @@ public class BeanViewException extends RuntimeException {
           .toString();
       return new NotAValidPropertyPathException(string);
     }
+
+    static NotAValidPropertyPathException propertyPathOverListsNotAllowed(TransitiveProperty transitiveProperty,
+        Method method) {
+      return new NotAValidPropertyPathException("Property paths over collections are not allowed.\n"
+          + "Please specify a global type conversion for the collections elements or use a custom field conversion.\n"
+          + "Attempt to go over collection occured for property path " + transitiveProperty.toString(true)
+          + "\nwith next invocation of " + method.toGenericString());
+    }
   }
 
   private BeanViewException() {
@@ -160,13 +168,6 @@ public class BeanViewException extends RuntimeException {
   static BeanViewException zeroInteractions(Class<?> sensorType) {
     return new BeanViewException(String
         .format("There were zero interactions with the property selector applied on type %s.", sensorType.getName()));
-  }
-
-  static BeanViewException propertyPathOverListsNotAllowed(TransitiveProperty transitiveProperty, Method method) {
-    return new BeanViewException("Property paths over collections are not allowed.\n"
-        + "Please specify a global type conversion for the collections elements or use a custom field conversion.\n"
-        + "Attempt to go over collection occured for property path " + transitiveProperty
-        + "\n with next invocation of " + method.toGenericString());
   }
 
   public static BeanViewException propertyResolveError(TransitiveProperty transitiveProperty, Method method) {
