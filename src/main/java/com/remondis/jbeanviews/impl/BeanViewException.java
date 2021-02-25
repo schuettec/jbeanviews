@@ -1,14 +1,11 @@
 package com.remondis.jbeanviews.impl;
 
-import static com.remondis.jbeanviews.impl.InvocationSensor.Invocation.invocationsToString;
 import static com.remondis.jbeanviews.impl.Properties.asString;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
-
-import com.remondis.jbeanviews.impl.InvocationSensor.Invocation;
 
 public class BeanViewException extends RuntimeException {
 
@@ -22,12 +19,9 @@ public class BeanViewException extends RuntimeException {
       super(message);
     }
 
-    static NotAValidPropertyPathException notAValidPropertyPath(Class<?> sensorType,
-        List<Invocation> trackedInvocations) {
+    static NotAValidPropertyPathException notAValidPropertyPath(Class<?> sensorType, TransitiveProperty property) {
       String string = new StringBuilder("The tracked invocations do not select a valid property path: ")
-          .append(sensorType.getName())
-          .append(".")
-          .append(invocationsToString(trackedInvocations))
+          .append(property)
           .toString();
       return new NotAValidPropertyPathException(string);
     }
@@ -168,13 +162,16 @@ public class BeanViewException extends RuntimeException {
         .format("There were zero interactions with the property selector applied on type %s.", sensorType.getName()));
   }
 
-  static BeanViewException accessError(Class<?> sensorType, List<Invocation> invocations, Throwable e) {
-    StringBuilder b = new StringBuilder("Error while accessing a property '").append(sensorType.getName())
-        .append("' with the following property path: ")
-        .append(sensorType.getSimpleName())
-        .append(".")
-        .append(Invocation.invocationsToString(invocations));
-    return new BeanViewException(b.toString(), e);
+  static BeanViewException propertyPathOverListsNotAllowed(TransitiveProperty transitiveProperty, Method method) {
+    return new BeanViewException("Property paths over collections are not allowed.\n"
+        + "Please specify a global type conversion for the collections elements or use a custom field conversion.\n"
+        + "Attempt to go over collection occured for property path " + transitiveProperty
+        + "\n with next invocation of " + method.toGenericString());
+  }
+
+  public static BeanViewException propertyResolveError(TransitiveProperty transitiveProperty, Method method) {
+    return new BeanViewException("Could not determine property for method " + method.toGenericString()
+        + "\n expanding property path for " + transitiveProperty.toString(true));
   }
 
 }

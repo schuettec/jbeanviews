@@ -24,8 +24,6 @@ import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import com.remondis.jbeanviews.impl.InvocationSensor.Invocation;
-
 /**
  * This is a util class that provides useful reflective methods. <b>Intended for
  * internal use only!</b>.
@@ -342,21 +340,14 @@ class ReflectionUtil {
    * @param method The getter or setter method.
    * @return Returns the name of the property.
    */
-  static String toPropertyName(Invocation invocation) {
-    Method method = invocation.getMethod();
+  static String toPropertyName(Method method) {
     String name = method.getName();
     if (isBoolGetter(method)) {
       return firstCharacterToLowerCase(name.substring(2, name.length()));
     } else {
-      if (isGetterWithArgumentSupport(method)) {
+      if (isGetterOrSetter(method)) {
         // Use the default implementation to convert property names correctly.
-        // Support list/map arguments
-        if (isList(method.getDeclaringClass())) {
-          String argument = invocation.getArgs()[0].toString();
-          return "[" + argument + "]";
-        } else {
-          return Introspector.decapitalize(name.substring(3, name.length()));
-        }
+        return Introspector.decapitalize(name.substring(3, name.length()));
       } else {
         throw new IllegalArgumentException("The specified method is neither a getter nor a setter method.");
       }
@@ -368,4 +359,21 @@ class ReflectionUtil {
     c[0] = Character.toLowerCase(c[0]);
     return new String(c);
   }
+
+  static boolean isGetterOrSetter(Method method) {
+    return isGetter(method) || isSetter(method);
+  }
+
+  static boolean isSetter(Method method) {
+    boolean validName = method.getName()
+        .startsWith(SET);
+    boolean hasArguments = hasArguments(method, 1);
+    boolean hasReturnType = hasReturnType(method);
+    return validName && !hasReturnType && hasArguments;
+  }
+
+  static boolean hasArguments(Method method, int count) {
+    return method.getParameterCount() == count;
+  }
+
 }

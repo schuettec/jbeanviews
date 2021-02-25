@@ -1,23 +1,23 @@
 package com.remondis.jbeanviews.impl;
 
 import static com.remondis.jbeanviews.impl.BeanViewException.exceptionInPropertyPath;
+import static com.remondis.jbeanviews.impl.BeanViewException.propertyPathOverListsNotAllowed;
+import static com.remondis.jbeanviews.impl.BeanViewException.propertyResolveError;
 import static com.remondis.jbeanviews.impl.BeanViewException.zeroInteractions;
 import static com.remondis.jbeanviews.impl.BeanViewException.NotAValidPropertyPathException.notAValidPropertyPath;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.denyNoReturnType;
-import static com.remondis.jbeanviews.impl.ReflectionUtil.findGenericTypeFromMethod;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isBean;
+import static com.remondis.jbeanviews.impl.ReflectionUtil.isCollection;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isGetter;
-import static com.remondis.jbeanviews.impl.ReflectionUtil.isList;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isMap;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.nullOrDefaultValue;
-import static java.util.Arrays.asList;
+import static com.remondis.jbeanviews.impl.ReflectionUtil.toPropertyName;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.toList;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -30,102 +30,9 @@ import net.sf.cglib.proxy.UndeclaredThrowableException;
 
 public class InvocationSensor<T> {
 
-  public static class Invocation {
-    private Method method;
-    private Object[] args;
-    private Class<?> genericReturnType;
-
-    Invocation(Method method, Object[] args) {
-      super();
-      this.method = method;
-      this.args = args;
-    }
-
-    Invocation(Method method, Class<?> genericReturnType, Object[] args) {
-      super();
-      this.method = method;
-      this.genericReturnType = genericReturnType;
-      this.args = args;
-    }
-
-    public Class<?> getGenericReturnType() {
-      return genericReturnType;
-    }
-
-    public Method getMethod() {
-      return method;
-    }
-
-    public Object[] getArgs() {
-      return args;
-    }
-
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + Arrays.hashCode(args);
-      result = prime * result + ((genericReturnType == null) ? 0 : genericReturnType.hashCode());
-      result = prime * result + ((method == null) ? 0 : method.hashCode());
-      return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      Invocation other = (Invocation) obj;
-      if (!Arrays.equals(args, other.args))
-        return false;
-      if (genericReturnType == null) {
-        if (other.genericReturnType != null)
-          return false;
-      } else if (!genericReturnType.equals(other.genericReturnType))
-        return false;
-      if (method == null) {
-        if (other.method != null)
-          return false;
-      } else if (!method.equals(other.method))
-        return false;
-      return true;
-    }
-
-    @Override
-    public String toString() {
-      return new StringBuilder(getMethod().getName()).append("(")
-          .append(Arrays.toString(getArgs())
-              .replaceAll("\\[|\\]", ""))
-          .append(")")
-          .toString();
-    }
-
-    public static String invocationsToString(List<Invocation> invocations) {
-      StringBuilder b = new StringBuilder();
-      Iterator<Invocation> it = invocations.iterator();
-      while (it.hasNext()) {
-        Invocation invocation = it.next();
-        b.append(invocation.getMethod()
-            .getName())
-            .append("(");
-        b.append(Arrays.toString(invocation.getArgs())
-            .replaceAll("\\[|\\]", ""))
-            .append(")");
-        if (it.hasNext()) {
-          b.append(".");
-        }
-      }
-      return b.toString();
-    }
-
-  }
-
   private T proxyObject;
 
-  private List<Invocation> invocations = new LinkedList<>();
+  private TransitiveProperty transitiveProperty;
 
   private Class<T> superType;
 
@@ -133,81 +40,58 @@ public class InvocationSensor<T> {
     this.superType = superType;
   }
 
-  private T createProxy(Class<T> superType, boolean supportTransitiveCalls) {
-    Enhancer enhancer = createProxyObject(superType, supportTransitiveCalls);
+  private T createProxy(Class<T> superType) {
+    Enhancer enhancer = createProxyObject(superType);
     return superType.cast(enhancer.create());
   }
 
-  private Enhancer createProxyObject(Class<?> superType, boolean supportTransitiveCalls) {
+  private Enhancer createProxyObject(Class<?> superType) {
     Enhancer enhancer = new Enhancer();
     enhancer.setSuperclass(superType);
     enhancer.setCallback(new InvocationHandler() {
       @Override
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Invocation invocation = new Invocation(method, args);
-        if (ReflectionUtil.isGetter(method)) {
+        if (isGetter(method)) {
           denyNoReturnType(method);
-          // schuettec - Get property name from method and mark this property as called.
-          invocations.add(invocation);
-          if (supportTransitiveCalls) {
-            // schuettec - For getter, return a new enhancer
-            Class<?> returnType = method.getReturnType();
-            if (isMap(returnType) || isList(returnType)) {
-              // if the type is a Map then the desired type is the second type argument
-              int typeIndex = isMap(returnType) ? 1 : 0;
-              Class<?> genericType = findGenericTypeFromMethod(method, typeIndex);
-              Enhancer enhancer = createCollectionProxyObject(returnType, genericType);
-              return returnType.cast(enhancer.create());
-            } else if (ReflectionUtil.isBean(returnType)) {
-              Enhancer enhancer = createProxyObject(returnType, supportTransitiveCalls);
-              return returnType.cast(enhancer.create());
-            } else {
-              return nullOrDefaultValue(method.getReturnType());
-            }
+          PropertyDescriptor property = resolveProperty(method);
+          if (isNull(transitiveProperty)) {
+            transitiveProperty = new TransitiveProperty();
+          }
+          transitiveProperty.add(property);
+          // schuettec - For getter, return a new enhancer
+          Class<?> returnType = method.getReturnType();
+          if (isMap(returnType) || isCollection(returnType)) {
+            throw propertyPathOverListsNotAllowed(transitiveProperty, method);
+          } else if (isBean(returnType)) {
+            Enhancer enhancer = createProxyObject(returnType);
+            return returnType.cast(enhancer.create());
           } else {
             return nullOrDefaultValue(method.getReturnType());
           }
         } else {
-          throw notAValidPropertyPath(superType, asList(invocation));
+          throw notAValidPropertyPath(superType, transitiveProperty);
         }
       }
-
     });
     return enhancer;
   }
 
-  private Enhancer createCollectionProxyObject(Class<?> superType, Class<?> genericType) {
-    Enhancer enhancer = new Enhancer();
-    enhancer.setSuperclass(superType);
-    enhancer.setCallback(new InvocationHandler() {
-      @Override
-      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Invocation invocation = new Invocation(method, genericType, args);
-        if (isGetter(method)) {
-          denyNoReturnType(method);
-          // schuettec - Get property name from method and mark this property as called.
-          invocations.add(invocation);
-          // schuettec - For getter, return a new enhancer
-          Class<?> returnType = genericType;
-          if (isMap(returnType) || isList(returnType)) {
-            // if the type is a Map then the desired type is the second type argument
-            int typeIndex = isMap(returnType) ? 1 : 0;
-            Class<?> genericType = findGenericTypeFromMethod(method, typeIndex);
-            Enhancer enhancer = createCollectionProxyObject(returnType, genericType);
-            return returnType.cast(enhancer.create());
-          } else if (isBean(returnType)) {
-            Enhancer enhancer = createProxyObject(returnType, true);
-            return returnType.cast(enhancer.create());
-          } else {
-            return nullOrDefaultValue(method.getReturnType());
-          }
-        } else {
-          throw notAValidPropertyPath(superType, asList(invocation));
-        }
-      }
-
-    });
-    return enhancer;
+  private PropertyDescriptor resolveProperty(Method method) {
+    Class<?> currentType = superType;
+    if (nonNull(transitiveProperty)) {
+      currentType = transitiveProperty.getPropertyType();
+    }
+    String expectedPropertyName = toPropertyName(method);
+    List<PropertyDescriptor> properties = Properties.getProperties(currentType)
+        .stream()
+        .filter(pd -> pd.getName()
+            .equals(expectedPropertyName))
+        .collect(toList());
+    if (properties.size() > 1 || properties.isEmpty()) {
+      throw propertyResolveError(transitiveProperty, method);
+    } else {
+      return properties.get(0);
+    }
   }
 
   /**
@@ -217,59 +101,31 @@ public class InvocationSensor<T> {
    *
    * @return The proxy.
    */
-  private T getSensor(boolean supportTransitiveCalls) {
-    proxyObject = createProxy(superType, supportTransitiveCalls);
+  private T getSensor() {
+    proxyObject = createProxy(superType);
     return proxyObject;
   }
 
   /**
-   * Returns the list of property names that were tracked by get calls.
-   *
-   * @return Returns the tracked property names.
-   */
-  List<Invocation> getTrackedInvocations() {
-    return Collections.unmodifiableList(invocations);
-  }
-
-  /**
-   * Checks if there were any properties accessed by get calls.
-   *
-   * @return Returns <code>true</code> if there were at least one interaction with a property. Otherwise
-   *         <code>false</code> is returned.
-   */
-  boolean hasTrackedInvocations() {
-    return !invocations.isEmpty();
-  }
-
-  /**
    * Executes a {@link Function} lambda on a proxy object of the specified type and returns the
-   * {@link PropertyDescriptor} of the property selected.
+   * {@link TransitiveProperty} of the property path selected.
    *
    * @param sensorType
    *        The type of sensor object.
    * @param selector
    *        The selector lambda.
-   * @return Returns the {@link PropertyDescriptor} selected by the lambda.
+   * @return Returns the {@link TransitiveProperty} selected by the lambda.
    * @throws BeanViewException Thrown if no interaction was tracked by the field selector, if a property path fails with
    *         an exception or if the property path contains illegal calls to unsupported methods.
    */
   public static <R, T> TransitiveProperty getTransitiveTypedProperty(Class<T> sensorType, PropertyPath<R, T> selector)
       throws BeanViewException {
     InvocationSensor<T> invocationSensor = new InvocationSensor<T>(sensorType);
-    T sensor = invocationSensor.getSensor(true);
+    T sensor = invocationSensor.getSensor();
     // perform the selector lambda on the sensor
     try {
       R returnValue = selector.selectProperty(sensor);
-      // if any property interaction was tracked...
-      if (invocationSensor.hasTrackedInvocations()) {
-        // ...make sure it was exactly one property interaction
-        List<Invocation> trackedInvocations = invocationSensor.getTrackedInvocations();
-        // Transitively check the tracked invocation and validate if they select a valid
-        // property path.
-        return TransitiveProperty.ofInvocations(sensorType, trackedInvocations);
-      } else {
-        throw zeroInteractions(sensorType);
-      }
+      return invocationSensor.getTransitiveProperty();
     } catch (UndeclaredThrowableException e) {
       Throwable undeclaredThrowable = e.getUndeclaredThrowable();
       if (undeclaredThrowable instanceof NotAValidPropertyPathException) {
@@ -282,6 +138,18 @@ public class InvocationSensor<T> {
     } catch (Exception exception) {
       throw exceptionInPropertyPath(sensorType, exception);
     }
+  }
+
+  private TransitiveProperty getTransitiveProperty() {
+    if (!hasTrackedInvocations()) {
+      throw zeroInteractions(superType);
+    } else {
+      return transitiveProperty;
+    }
+  }
+
+  private boolean hasTrackedInvocations() {
+    return nonNull(transitiveProperty);
   }
 
 }

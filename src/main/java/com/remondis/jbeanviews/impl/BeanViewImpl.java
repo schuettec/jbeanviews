@@ -52,9 +52,9 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   }
 
   private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
-    BeanViewImpl dis = this;
-    viewBindings.stream()
-        .map(declaration -> new ViewBindingImpl(dis, declaration.getViewProperty(), declaration.getSourceProperty()));
+    this.viewBindings = viewBindings.stream()
+        .map(declaration -> new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty()))
+        .collect(Collectors.toMap(ViewBinding::getViewPath, identity()));
   }
 
   private void createImplicitViewBindings() {

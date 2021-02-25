@@ -39,6 +39,11 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
       return viewProperty;
     }
 
+    @Override
+    public String toString() {
+      return "View property '" + viewProperty + "' -> source property '" + sourceProperty + "'";
+    }
+
   }
 
   public BeanViewBuilderImpl(Class<S> sourceType, Class<V> viewType) {
