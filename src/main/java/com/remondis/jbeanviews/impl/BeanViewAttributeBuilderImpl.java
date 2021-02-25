@@ -21,6 +21,7 @@ public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeB
 
     // TODO: Add simple binding
     // TODO: Extend API to add binding with a) unidirectional transformation b) bidirectional transformation.
+    // beanViewBuilder.addViewBinding(new ViewBindingImpl(beanView, viewProperty, sourceProperty));
     return beanViewBuilder;
   }
 }

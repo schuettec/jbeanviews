@@ -12,6 +12,7 @@ import com.remondis.jbeanviews.api.PropertyPath;
 import com.remondis.jbeanviews.api.TypeConversion;
 import com.remondis.jbeanviews.api.TypeConversion.TypeMappingBuilder;
 import com.remondis.jbeanviews.api.TypeConversionBuilder;
+import com.remondis.jbeanviews.api.ViewBinding;
 
 public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
 
@@ -19,6 +20,7 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
   protected Class<V> viewType;
 
   protected Set<TypeConversion> typeConversions = new HashSet();
+  protected Set<ViewBinding> viewBindings = new HashSet<>();
 
   public BeanViewBuilderImpl(Class<S> sourceType, Class<V> viewType) {
     super();
@@ -63,6 +65,11 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
 
   Class<V> getViewType() {
     return viewType;
+  }
+
+  void addViewBinding(ViewBinding viewBinding) {
+    this.viewBindings.add(viewBinding);
+
   }
 
 }

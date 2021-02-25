@@ -236,6 +236,37 @@ public class ViewBindingImpl implements ViewBinding {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((sourceProperty == null) ? 0 : sourceProperty.hashCode());
+    result = prime * result + ((viewProperty == null) ? 0 : viewProperty.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    ViewBindingImpl other = (ViewBindingImpl) obj;
+    if (sourceProperty == null) {
+      if (other.sourceProperty != null)
+        return false;
+    } else if (!sourceProperty.equals(other.sourceProperty))
+      return false;
+    if (viewProperty == null) {
+      if (other.viewProperty != null)
+        return false;
+    } else if (!viewProperty.equals(other.viewProperty))
+      return false;
+    return true;
+  }
+
+  @Override
   public String toString() {
     return "View property '" + viewProperty + "' represents source property '" + sourceProperty + "'";
   }
