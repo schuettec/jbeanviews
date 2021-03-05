@@ -69,22 +69,18 @@ public class BeanViewException extends RuntimeException {
         .append(destCtx.getCurrentType()
             .getSimpleName())
         .append(".\n")
-        .append("Use replace for manual mapping!\n")
+        .append("Please specify either a type conversion or a field conversion!\n")
         .append("\nType nesting is\n\t")
         .append("-> in source type: ")
         .append("\n\t")
-        .append(rootSrcCtx.get()
-            .toString())
+        .append(rootSrcCtx.toString())
         .append("\n\t-> in destination type: ")
         .append("\n\t")
-        .append(rootDestCtx.get()
-            .toString())
+        .append(rootDestCtx.toString())
         .append("\n\tcannot map \n\t")
-        .append(sourceCtx.get()
-            .toString())
+        .append(sourceCtx.toString())
         .append("\n\tto\n\t")
-        .append(destCtx.get()
-            .toString());
+        .append(destCtx.toString());
     return new BeanViewException(builder.toString());
   }
 

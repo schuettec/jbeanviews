@@ -161,8 +161,14 @@ public class ViewBindingImpl implements ViewBinding {
         || (isCollectionOrMap(sourceType) && noCollectionOrMap(destinationType));
 
     if (incompatibleCollecion) {
-      throw BeanViewException.incompatibleCollectionMapping(sourceProperty.getProperty(), sourceCtx,
-          viewProperty.getProperty(), destCtx);
+      // Check if there is a type conversion
+      if (beanView.hasTypeConversion(sourceType, destinationType)) {
+        validateTypeMapping(sourceProperty.getProperty(), sourceType, viewProperty.getProperty(), destinationType);
+        return;
+      } else {
+        throw BeanViewException.incompatibleCollectionMapping(sourceProperty.getProperty(), sourceCtx,
+            viewProperty.getProperty(), destCtx);
+      }
     }
     if (isMap(sourceType)) {
       GenericParameterContext sourceKeyContext = sourceCtx.goInto(0);

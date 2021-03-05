@@ -131,8 +131,7 @@ public class GenericParameterContext {
 
   @Override
   public String toString() {
-    return "GenericParameterContext [currentType=" + currentType + ", currentParameterizedType="
-        + (isEmpty() ? "empty" : get()) + "]";
+    return (isEmpty() ? currentType.toGenericString() : get().toString());
   }
 
 }
