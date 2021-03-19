@@ -86,7 +86,11 @@ public class ViewBindingImpl implements ViewBinding {
     if (sourceToView) {
       return typeConversion.sourceToDestination(sourceValue);
     } else {
-      return typeConversion.destinationToSource(sourceValue);
+      if (typeConversion.isBidirectional()) {
+        return typeConversion.destinationToSource(sourceValue);
+      } else {
+        throw BeanViewException.typeConversionNotBidirectional(typeConversion);
+      }
     }
   }
 
@@ -161,8 +165,14 @@ public class ViewBindingImpl implements ViewBinding {
         || (isCollectionOrMap(sourceType) && noCollectionOrMap(destinationType));
 
     if (incompatibleCollecion) {
-      throw BeanViewException.incompatibleCollectionMapping(sourceProperty.getProperty(), sourceCtx,
-          viewProperty.getProperty(), destCtx);
+      // Check if there is a type conversion
+      if (beanView.hasTypeConversion(sourceType, destinationType)) {
+        validateTypeMapping(sourceProperty.getProperty(), sourceType, viewProperty.getProperty(), destinationType);
+        return;
+      } else {
+        throw BeanViewException.incompatibleCollectionMapping(sourceProperty.getProperty(), sourceCtx,
+            viewProperty.getProperty(), destCtx);
+      }
     }
     if (isMap(sourceType)) {
       GenericParameterContext sourceKeyContext = sourceCtx.goInto(0);
@@ -233,6 +243,37 @@ public class ViewBindingImpl implements ViewBinding {
 
     _validateTransformation(sourceCtx, destCtx);
 
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((sourceProperty == null) ? 0 : sourceProperty.hashCode());
+    result = prime * result + ((viewProperty == null) ? 0 : viewProperty.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    ViewBindingImpl other = (ViewBindingImpl) obj;
+    if (sourceProperty == null) {
+      if (other.sourceProperty != null)
+        return false;
+    } else if (!sourceProperty.equals(other.sourceProperty))
+      return false;
+    if (viewProperty == null) {
+      if (other.viewProperty != null)
+        return false;
+    } else if (!viewProperty.equals(other.viewProperty))
+      return false;
+    return true;
   }
 
   @Override

@@ -1,5 +1,7 @@
 package com.remondis.jbeanviews.api;
 
+import com.remondis.jbeanviews.impl.BeanViewBuilderImpl;
+
 public class BeanViews {
 
   public static class TypeBuilder<S> {
@@ -10,7 +12,7 @@ public class BeanViews {
     }
 
     public <V> BeanViewBuilder<S, V> toView(Class<V> viewType) {
-      return new BeanViewBuilder<>(sourceType, viewType);
+      return new BeanViewBuilderImpl<S, V>(sourceType, viewType);
     }
   }
 

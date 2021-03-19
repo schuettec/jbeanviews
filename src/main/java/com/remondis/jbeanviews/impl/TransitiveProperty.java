@@ -94,6 +94,37 @@ class TransitiveProperty {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((path == null) ? 0 : path.hashCode());
+    result = prime * result + ((rootType == null) ? 0 : rootType.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    TransitiveProperty other = (TransitiveProperty) obj;
+    if (path == null) {
+      if (other.path != null)
+        return false;
+    } else if (!path.equals(other.path))
+      return false;
+    if (rootType == null) {
+      if (other.rootType != null)
+        return false;
+    } else if (!rootType.equals(other.rootType))
+      return false;
+    return true;
+  }
+
+  @Override
   public String toString() {
     return path;
   }

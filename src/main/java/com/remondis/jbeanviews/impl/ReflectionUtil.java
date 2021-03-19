@@ -6,12 +6,16 @@ import static com.remondis.jbeanviews.impl.BeanViewException.reflectiveMethodInv
 import static com.remondis.jbeanviews.impl.BeanViewException.unsupportedCollection;
 import static java.util.Objects.isNull;
 
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,9 +32,30 @@ import java.util.stream.Collectors;
  */
 class ReflectionUtil {
 
+  static final String IS = "is";
+  static final String GET = "get";
+  static final String SET = "set";
+
   private static final Set<Class<?>> BUILD_IN_TYPES;
+  private static final Map<Class<?>, Object> DEFAULT_VALUES;
+
+  private static final Map<String, Class<?>> primitiveNameMap = new HashMap<>();
+  private static final Map<Class<?>, Class<?>> wrapperMap = new HashMap<>();
 
   static {
+    // schuettec - 08.02.2017 : According to the spec:
+    // https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
+    Map<Class<?>, Object> map = new HashMap<Class<?>, Object>();
+    map.put(boolean.class, false);
+    map.put(char.class, '\0');
+    map.put(byte.class, (byte) 0);
+    map.put(short.class, (short) 0);
+    map.put(int.class, 0);
+    map.put(long.class, 0L);
+    map.put(float.class, 0f);
+    map.put(double.class, 0d);
+    DEFAULT_VALUES = Collections.unmodifiableMap(map);
+
     BUILD_IN_TYPES = new HashSet<>();
     BUILD_IN_TYPES.add(Boolean.class);
     BUILD_IN_TYPES.add(Character.class);
@@ -42,12 +67,6 @@ class ReflectionUtil {
     BUILD_IN_TYPES.add(Double.class);
     BUILD_IN_TYPES.add(String.class);
 
-  }
-
-  private static final Map<String, Class<?>> primitiveNameMap = new HashMap<>();
-  private static final Map<Class<?>, Class<?>> wrapperMap = new HashMap<>();
-
-  static {
     primitiveNameMap.put(boolean.class.getName(), boolean.class);
     primitiveNameMap.put(byte.class.getName(), byte.class);
     primitiveNameMap.put(char.class.getName(), char.class);
@@ -67,6 +86,19 @@ class ReflectionUtil {
     wrapperMap.put(double.class, Double.class);
     wrapperMap.put(float.class, Float.class);
     wrapperMap.put(void.class, Void.class);
+  }
+
+  /**
+   * Returns the default value for the specified primitive type according to the Java Language Specification. See
+   * https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html for more information.
+   *
+   * @param type
+   *        The type of the primitive.
+   * @return Returns the default value of the specified primitive type.
+   */
+  @SuppressWarnings("unchecked")
+  static <T> T defaultValue(Class<T> type) {
+    return (T) DEFAULT_VALUES.get(type);
   }
 
   /**
@@ -219,4 +251,129 @@ class ReflectionUtil {
       throw newInstanceFailed(type, e);
     }
   }
+
+  static void denyNoReturnType(Method method) {
+    if (!hasReturnType(method)) {
+      throw BeanViewException.noReturnTypeOnGetter(method);
+    }
+  }
+
+  /**
+   * Checks if the method has a return type.
+   *
+   * @param method
+   *        the method
+   * @return <code>true</code>, if return type is not {@link Void} or <code>false</code> otherwise.
+   */
+  static boolean hasReturnType(Method method) {
+    return !method.getReturnType()
+        .equals(Void.TYPE);
+  }
+
+  /**
+   * Finds the generic return type of a method in nested generics. For example this method returns {@link String} when
+   * called on a method like <code>List&lt;List&lt;Set&lt;String&gt;&gt;&gt; get();</code>.
+   *
+   * @param method The method to analyze.
+   * @return Returns the inner generic type.
+   */
+  static Class<?> findGenericTypeFromMethod(Method method, int typeIndex) {
+    ParameterizedType parameterizedType = (ParameterizedType) method.getGenericReturnType();
+    Type type = null;
+    while (parameterizedType != null) {
+      type = parameterizedType.getActualTypeArguments()[typeIndex];
+      if (type instanceof ParameterizedType) {
+        parameterizedType = (ParameterizedType) type;
+      } else {
+        parameterizedType = null;
+      }
+    }
+    return (Class<?>) type;
+  }
+
+  static boolean isGetterWithArgumentSupport(Method method) {
+    boolean isBool = isBoolGetter(method);
+    boolean validName = (isBool ? method.getName()
+        .startsWith(IS)
+        : method.getName()
+            .startsWith(GET));
+    boolean hasReturnType = hasReturnType(method);
+    return validName && hasReturnType;
+  }
+
+  static boolean isGetter(Method method) {
+    boolean isBool = isBoolGetter(method);
+    boolean validName = (isBool ? method.getName()
+        .startsWith(IS)
+        : method.getName()
+            .startsWith(GET));
+    boolean hasArguments = hasArguments(method);
+    boolean hasReturnType = hasReturnType(method);
+    return validName && hasReturnType && !hasArguments;
+  }
+
+  static boolean hasArguments(Method method) {
+    return method.getParameterCount() != 0;
+  }
+
+  static boolean isBoolGetter(Method method) {
+    return isBool(method.getReturnType());
+  }
+
+  static boolean isBool(Class<?> type) {
+    // isBool is used to determine if "is"-method should be used. This is only the
+    // case for primitive type.
+    return type == Boolean.TYPE;
+  }
+
+  static Object nullOrDefaultValue(Class<?> returnType) {
+    if (returnType.isPrimitive()) {
+      return defaultValue(returnType);
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Returns the name of a property represented with either a getter or setter method.
+   *
+   * @param method The getter or setter method.
+   * @return Returns the name of the property.
+   */
+  static String toPropertyName(Method method) {
+    String name = method.getName();
+    if (isBoolGetter(method)) {
+      return firstCharacterToLowerCase(name.substring(2, name.length()));
+    } else {
+      if (isGetterOrSetter(method)) {
+        // Use the default implementation to convert property names correctly.
+        return Introspector.decapitalize(name.substring(3, name.length()));
+      } else {
+        throw new IllegalArgumentException("The specified method is neither a getter nor a setter method.");
+      }
+    }
+  }
+
+  private static String firstCharacterToLowerCase(String input) {
+    char[] c = input.toCharArray();
+    c[0] = Character.toLowerCase(c[0]);
+    return new String(c);
+  }
+
+  static boolean isGetterOrSetter(Method method) {
+    return isGetter(method) || isSetter(method);
+  }
+
+  static boolean isSetter(Method method) {
+    boolean validName = method.getName()
+        .startsWith(SET);
+    boolean hasArguments = hasArguments(method, 1);
+    boolean hasReturnType = hasReturnType(method);
+    return validName && !hasReturnType && hasArguments;
+  }
+
+  static boolean hasArguments(Method method, int count) {
+    return method.getParameterCount() == count;
+  }
+
 }

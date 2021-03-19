@@ -29,6 +29,7 @@ import com.remondis.jbeanviews.api.BeanViews;
 import com.remondis.jbeanviews.api.TypeConversion;
 import com.remondis.jbeanviews.api.TypeConversionKey;
 import com.remondis.jbeanviews.api.ViewBinding;
+import com.remondis.jbeanviews.impl.BeanViewBuilderImpl.ViewBindingDeclaration;
 
 public class BeanViewImpl<S, V> implements BeanView<S, V> {
 
@@ -39,16 +40,47 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
 
   private Map<String, ViewBinding> viewBindings = new Hashtable();
 
-  public BeanViewImpl(Class<S> sourceType, Class<V> viewType, Set<TypeConversion> typeConversions) {
+  public BeanViewImpl(Class<S> sourceType, Class<V> viewType, Set<TypeConversion> typeConversions,
+      Set<ViewBindingDeclaration> viewBindings) {
     this.sourceType = sourceType;
     this.viewType = viewType;
     typeConversions.stream()
         .forEach(typeConversion -> this.typeConversions.put(typeConversion.getTypeConversionKey(), typeConversion));
-    buildBindings();
-    validateBindings();
+    createExplicitViewBindings(viewBindings);
+    createImplicitViewBindings();
+    validateViewBindings();
   }
 
-  private void buildBindings() {
+  @Override
+  public V toView(S source) {
+    V view = ReflectionUtil.newInstance(viewType);
+    viewBindings.values()
+        .stream()
+        .forEach(binding -> binding.getSourceValueAsViewValue(view, source));
+    return view;
+  }
+
+  @Override
+  public S toSource(V view) {
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Collection<V> toView(Collection<? extends S> source) {
+    Collector collector = ReflectionUtil.getCollector(source);
+    return (Collection<V>) source.stream()
+        .map(s -> toViewOrNull(s))
+        .collect(collector);
+  }
+
+  private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
+    this.viewBindings = viewBindings.stream()
+        .map(declaration -> new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty()))
+        .collect(Collectors.toMap(ViewBinding::getViewPath, identity()));
+  }
+
+  private void createImplicitViewBindings() {
 
     // Build type map for source
     Map<String, TransitiveProperty> viewProperties = getPropertiesRecursively(viewType, viewType, null,
@@ -160,29 +192,6 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   }
 
   @Override
-  public V toView(S source) {
-    V view = ReflectionUtil.newInstance(viewType);
-    viewBindings.values()
-        .stream()
-        .forEach(binding -> binding.getSourceValueAsViewValue(view, source));
-    return view;
-  }
-
-  @Override
-  public S toSource(V view) {
-    return null;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public Collection<V> toView(Collection<? extends S> source) {
-    Collector collector = ReflectionUtil.getCollector(source);
-    return (Collection<V>) source.stream()
-        .map(s -> toViewOrNull(s))
-        .collect(collector);
-  }
-
-  @Override
   public Class<V> getViewType() {
     return viewType;
   }
@@ -197,10 +206,11 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
         .get();
     this.typeConversions.put(new TypeConversionKey<T1, T2>(sourceType, destinationType), TypeConversion.from(sourceType)
         .toView(destinationType)
-        .applying(beanView::toView, beanView::toSource));
+        .applying(beanView::toView)
+        .andReverse(beanView::toSource));
   }
 
-  private void validateBindings() {
+  private void validateViewBindings() {
     final List<BeanViewException> exceptions = new LinkedList<>();
     viewBindings.values()
         .stream()

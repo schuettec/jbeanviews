@@ -7,7 +7,35 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
+import com.remondis.jbeanviews.api.TypeConversion;
+
 public class BeanViewException extends RuntimeException {
+
+  static class NotAValidPropertyPathException extends RuntimeException {
+
+    private NotAValidPropertyPathException() {
+      super();
+    }
+
+    private NotAValidPropertyPathException(String message) {
+      super(message);
+    }
+
+    static NotAValidPropertyPathException notAValidPropertyPath(Class<?> sensorType, TransitiveProperty property) {
+      String string = new StringBuilder("The tracked invocations do not select a valid property path: ")
+          .append(property)
+          .toString();
+      return new NotAValidPropertyPathException(string);
+    }
+
+    static NotAValidPropertyPathException propertyPathOverListsNotAllowed(TransitiveProperty transitiveProperty,
+        Method method) {
+      return new NotAValidPropertyPathException("Property paths over collections are not allowed.\n"
+          + "Please specify a global type conversion for the collections elements or use a custom field conversion.\n"
+          + "Attempt to go over collection occured for property path " + transitiveProperty.toString(true)
+          + "\nwith next invocation of " + method.toGenericString());
+    }
+  }
 
   private BeanViewException() {
   }
@@ -26,6 +54,41 @@ public class BeanViewException extends RuntimeException {
 
   private BeanViewException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
     super(message, cause, enableSuppression, writableStackTrace);
+  }
+
+  static BeanViewException incompatibleCollectionMapping(PropertyDescriptor sourceProperty,
+      GenericParameterContext sourceCtx, PropertyDescriptor destinationProperty, GenericParameterContext destCtx) {
+    GenericParameterContext rootSrcCtx = new GenericParameterContext(sourceProperty.getReadMethod());
+    GenericParameterContext rootDestCtx = new GenericParameterContext(destinationProperty.getReadMethod());
+    StringBuilder builder = new StringBuilder("Incompatible nested collections found mapping\n\t");
+    builder.append(asString(sourceProperty))
+        .append(" to ~>\n\t")
+        .append(asString(destinationProperty))
+        .append("\nCannot map ")
+        .append(sourceCtx.getCurrentType()
+            .getSimpleName())
+        .append(" to ")
+        .append(destCtx.getCurrentType()
+            .getSimpleName())
+        .append(".\n")
+        .append("Please specify either a type conversion or a field conversion!\n")
+        .append("\nType nesting is\n\t")
+        .append("-> in source type: ")
+        .append("\n\t")
+        .append(rootSrcCtx.toString())
+        .append("\n\t-> in destination type: ")
+        .append("\n\t")
+        .append(rootDestCtx.toString())
+        .append("\n\tcannot map \n\t")
+        .append(sourceCtx.toString())
+        .append("\n\tto\n\t")
+        .append(destCtx.toString());
+    return new BeanViewException(builder.toString());
+  }
+
+  static BeanViewException exceptionInPropertyPath(Class<?> sensorType, Exception exception) {
+    return new BeanViewException(String.format("Property path on type '%s' threw an exception.", sensorType.getName()),
+        exception);
   }
 
   static BeanViewException propertyIntrospection(Class<?> inspectType, Exception cause) {
@@ -93,38 +156,26 @@ public class BeanViewException extends RuntimeException {
     return exception;
   }
 
-  static BeanViewException incompatibleCollectionMapping(PropertyDescriptor sourceProperty,
-      GenericParameterContext sourceCtx, PropertyDescriptor destinationProperty, GenericParameterContext destCtx) {
-    GenericParameterContext rootSrcCtx = new GenericParameterContext(sourceProperty.getReadMethod());
-    GenericParameterContext rootDestCtx = new GenericParameterContext(destinationProperty.getReadMethod());
-    StringBuilder builder = new StringBuilder("Incompatible nested collections found mapping\n\t");
-    builder.append(asString(sourceProperty))
-        .append(" to ~>\n\t")
-        .append(asString(destinationProperty))
-        .append("\nCannot map ")
-        .append(sourceCtx.getCurrentType()
-            .getSimpleName())
-        .append(" to ")
-        .append(destCtx.getCurrentType()
-            .getSimpleName())
-        .append(".\n")
-        .append("Use replace for manual mapping!\n")
-        .append("\nType nesting is\n\t")
-        .append("-> in source type: ")
-        .append("\n\t")
-        .append(rootSrcCtx.get()
-            .toString())
-        .append("\n\t-> in destination type: ")
-        .append("\n\t")
-        .append(rootDestCtx.get()
-            .toString())
-        .append("\n\tcannot map \n\t")
-        .append(sourceCtx.get()
-            .toString())
-        .append("\n\tto\n\t")
-        .append(destCtx.get()
-            .toString());
-    return new BeanViewException(builder.toString());
+  static BeanViewException noReturnTypeOnGetter(Method method) {
+    return new BeanViewException(
+        String.format("The method '%s' in type '%s' is not a valid getter because it has no return type.",
+            method.getName(), method.getDeclaringClass()
+                .getName()));
   }
 
+  static BeanViewException zeroInteractions(Class<?> sensorType) {
+    return new BeanViewException(String
+        .format("There were zero interactions with the property selector applied on type %s.", sensorType.getName()));
+  }
+
+  public static BeanViewException propertyResolveError(TransitiveProperty transitiveProperty, Method method) {
+    return new BeanViewException("Could not determine property for method " + method.toGenericString()
+        + "\n expanding property path for " + transitiveProperty.toString(true));
+  }
+
+  public static BeanViewException typeConversionNotBidirectional(TypeConversion<?, ?> tc) {
+    return new BeanViewException(
+        "Cannot reverse map from view to source because the following type conversion is unidirectional only: "
+            + tc.toString());
+  }
 }
