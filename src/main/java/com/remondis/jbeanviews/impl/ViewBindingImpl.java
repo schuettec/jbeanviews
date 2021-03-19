@@ -86,7 +86,11 @@ public class ViewBindingImpl implements ViewBinding {
     if (sourceToView) {
       return typeConversion.sourceToDestination(sourceValue);
     } else {
-      return typeConversion.destinationToSource(sourceValue);
+      if (typeConversion.isBidirectional()) {
+        return typeConversion.destinationToSource(sourceValue);
+      } else {
+        throw BeanViewException.typeConversionNotBidirectional(typeConversion);
+      }
     }
   }
 

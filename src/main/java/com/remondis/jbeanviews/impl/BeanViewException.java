@@ -7,6 +7,8 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
+import com.remondis.jbeanviews.api.TypeConversion;
+
 public class BeanViewException extends RuntimeException {
 
   static class NotAValidPropertyPathException extends RuntimeException {
@@ -171,4 +173,9 @@ public class BeanViewException extends RuntimeException {
         + "\n expanding property path for " + transitiveProperty.toString(true));
   }
 
+  public static BeanViewException typeConversionNotBidirectional(TypeConversion<?, ?> tc) {
+    return new BeanViewException(
+        "Cannot reverse map from view to source because the following type conversion is unidirectional only: "
+            + tc.toString());
+  }
 }

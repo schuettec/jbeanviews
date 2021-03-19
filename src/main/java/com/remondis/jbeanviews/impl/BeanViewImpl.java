@@ -51,6 +51,29 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     validateViewBindings();
   }
 
+  @Override
+  public V toView(S source) {
+    V view = ReflectionUtil.newInstance(viewType);
+    viewBindings.values()
+        .stream()
+        .forEach(binding -> binding.getSourceValueAsViewValue(view, source));
+    return view;
+  }
+
+  @Override
+  public S toSource(V view) {
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Collection<V> toView(Collection<? extends S> source) {
+    Collector collector = ReflectionUtil.getCollector(source);
+    return (Collection<V>) source.stream()
+        .map(s -> toViewOrNull(s))
+        .collect(collector);
+  }
+
   private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
     this.viewBindings = viewBindings.stream()
         .map(declaration -> new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty()))
@@ -169,29 +192,6 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   }
 
   @Override
-  public V toView(S source) {
-    V view = ReflectionUtil.newInstance(viewType);
-    viewBindings.values()
-        .stream()
-        .forEach(binding -> binding.getSourceValueAsViewValue(view, source));
-    return view;
-  }
-
-  @Override
-  public S toSource(V view) {
-    return null;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public Collection<V> toView(Collection<? extends S> source) {
-    Collector collector = ReflectionUtil.getCollector(source);
-    return (Collection<V>) source.stream()
-        .map(s -> toViewOrNull(s))
-        .collect(collector);
-  }
-
-  @Override
   public Class<V> getViewType() {
     return viewType;
   }
@@ -206,7 +206,8 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
         .get();
     this.typeConversions.put(new TypeConversionKey<T1, T2>(sourceType, destinationType), TypeConversion.from(sourceType)
         .toView(destinationType)
-        .applying(beanView::toView, beanView::toSource));
+        .applying(beanView::toView)
+        .andReverse(beanView::toSource));
   }
 
   private void validateViewBindings() {

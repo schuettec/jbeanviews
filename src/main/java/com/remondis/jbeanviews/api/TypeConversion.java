@@ -1,5 +1,6 @@
 package com.remondis.jbeanviews.api;
 
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 import java.util.function.Function;
@@ -50,17 +51,55 @@ public class TypeConversion<S, D> {
     }
 
     /**
-     * Specified a conversion function that performs the type mapping. When using
-     * {@link Function}, mapping into destination instances will not supported by
-     * the resulting mapper.
+     * Specified a conversion function that performs the type mapping.
      *
      * @param conversionFunction The conversion function.
      * @return Returns the {@link TypeConversion} for use within a
      *         {@link MappingConfiguration} configuration.
      */
-    public TypeConversion<S, D> applying(Function<S, D> conversionFunction, Function<D, S> reverseFunction) {
+    public TypeMappingReverseFunctionBuilder<S, D> applying(Function<S, D> conversionFunction) {
       requireNonNull(conversionFunction, "conversionFunction");
-      return new TypeConversion<>(source, destination, conversionFunction, reverseFunction);
+      return new TypeMappingReverseFunctionBuilder<S, D>(source, destination, conversionFunction);
+    }
+
+  }
+
+  public static class TypeMappingReverseFunctionBuilder<S, D> {
+    private Class<S> source;
+    private Class<D> destination;
+    private Function<S, D> conversionFunction;
+
+    TypeMappingReverseFunctionBuilder(Class<S> source, Class<D> destination, Function<S, D> conversionFunction) {
+      super();
+      this.source = source;
+      this.destination = destination;
+      this.conversionFunction = conversionFunction;
+    }
+
+    /**
+     * @return Returns a reverse conversion that always sets null.
+     */
+    public TypeConversion<S, D> unidirectional() {
+      return new TypeConversion<>(source, destination, conversionFunction, null);
+    }
+
+    /**
+     * @return Returns a reverse conversion that always sets null.
+     */
+    public TypeConversion<S, D> andReverseNull() {
+      return new TypeConversion<>(source, destination, conversionFunction, (something) -> null);
+    }
+
+    /**
+     * Specified a reverse conversion function that performs the reverse type mapping.
+     *
+     * @param reverseFunction The reverse conversion function.
+     * @return Returns the {@link TypeConversion} for use within a
+     *         {@link MappingConfiguration} configuration.
+     */
+    public TypeConversion<S, D> andReverse(Function<D, S> reverseFunction) {
+      requireNonNull(reverseFunction, "reverseFunction");
+      return new TypeConversion<S, D>(source, destination, conversionFunction, reverseFunction);
     }
 
   }
@@ -96,6 +135,10 @@ public class TypeConversion<S, D> {
 
   public S destinationToSource(D destination) {
     return reverseFunction.apply(destination);
+  }
+
+  public boolean isBidirectional() {
+    return nonNull(reverseFunction);
   }
 
   public Class<S> getSource() {
