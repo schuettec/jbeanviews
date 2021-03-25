@@ -60,11 +60,6 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     return view;
   }
 
-  @Override
-  public S toSource(V view) {
-    return null;
-  }
-
   @SuppressWarnings("unchecked")
   @Override
   public Collection<V> toView(Collection<? extends S> source) {
@@ -207,7 +202,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     this.typeConversions.put(new TypeConversionKey<T1, T2>(sourceType, destinationType), TypeConversion.from(sourceType)
         .toView(destinationType)
         .applying(beanView::toView)
-        .andReverse(beanView::toSource));
+        .unidirectional());
   }
 
   private void validateViewBindings() {

@@ -20,14 +20,6 @@ public interface BeanView<S, V> {
   public V toView(S source);
 
   /**
-   * Performs the mapping from the source to view type.
-   *
-   * @param source The source object to map to a new view object.
-   * @return Returns a newly created view object.
-   */
-  public S toSource(V view);
-
-  /**
    * Performs the mapping for the specified {@link Collection}.
    *
    * @param source The source collection to map to a new collection of view
