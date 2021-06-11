@@ -1,11 +1,13 @@
 package com.remondis.jbeanviews.impl;
 
+import java.util.Collection;
 import java.util.function.Function;
 
 import com.remondis.jbeanviews.api.BeanView;
 import com.remondis.jbeanviews.api.BeanViewAttributeBuilder;
 import com.remondis.jbeanviews.api.BeanViewBuilder;
 import com.remondis.jbeanviews.api.BeanViewBuilderWithFunction;
+import com.remondis.jbeanviews.api.BeanViewCollectionAttributeBuilder;
 import com.remondis.jbeanviews.api.PropertyPath;
 import com.remondis.jbeanviews.api.TypeConversion;
 import com.remondis.jbeanviews.api.TypeConversion.TypeMappingFunctionBuilder;
@@ -16,12 +18,14 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBui
   private BeanViewBuilderImpl<S, V> beanViewBuilder;
   private TransitiveProperty viewProperty;
   private TransitiveProperty sourceProperty;
+  private boolean collectionAttribute;
 
   public BeanViewBuilderWithFunctionImpl(BeanViewBuilderImpl<S, V> beanViewBuilder, TransitiveProperty sourceProperty,
-      TransitiveProperty viewProperty) {
+      TransitiveProperty viewProperty, boolean collectionAttribute) {
     this.beanViewBuilder = beanViewBuilder;
     this.sourceProperty = sourceProperty;
     this.viewProperty = viewProperty;
+    this.collectionAttribute = collectionAttribute;
   }
 
   @Override
@@ -34,6 +38,13 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBui
   public <O> BeanViewAttributeBuilder<S, O, V> bind(PropertyPath<O, V> viewAttribute) {
     _addBinding();
     return beanViewBuilder.bind(viewAttribute);
+  }
+
+  @Override
+  public <O> BeanViewCollectionAttributeBuilder<S, O, V> bindCollection(
+      PropertyPath<Collection<O>, V> viewCollectionAttribute) {
+    _addBinding();
+    return beanViewBuilder.bindCollection(viewCollectionAttribute);
   }
 
   @Override
@@ -63,7 +74,7 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBui
   }
 
   private void _addBinding(TypeConversion<OO, O> typeConversion) {
-    beanViewBuilder.addViewBinding(viewProperty, sourceProperty, typeConversion);
+    beanViewBuilder.addViewBinding(viewProperty, sourceProperty, typeConversion, collectionAttribute);
   }
 
   private TypeMappingFunctionBuilder<OO, O> typeConversion() {

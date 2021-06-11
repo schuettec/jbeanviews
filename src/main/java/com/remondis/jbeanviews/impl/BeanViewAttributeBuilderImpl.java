@@ -18,6 +18,7 @@ public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeB
   public <OO> BeanViewBuilderWithFunction<S, OO, O, V> to(PropertyPath<OO, S> sourceAttribute) {
     TransitiveProperty sourceProperty = InvocationSensor.getTransitiveTypedProperty(beanViewBuilder.getSourceType(),
         sourceAttribute);
-    return new BeanViewBuilderWithFunctionImpl<>(beanViewBuilder, sourceProperty, viewProperty);
+    return new BeanViewBuilderWithFunctionImpl<>(beanViewBuilder, sourceProperty, viewProperty, false);
   }
+
 }

@@ -1,5 +1,6 @@
 package com.remondis.jbeanviews.impl;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -8,6 +9,7 @@ import java.util.function.Function;
 import com.remondis.jbeanviews.api.BeanView;
 import com.remondis.jbeanviews.api.BeanViewAttributeBuilder;
 import com.remondis.jbeanviews.api.BeanViewBuilder;
+import com.remondis.jbeanviews.api.BeanViewCollectionAttributeBuilder;
 import com.remondis.jbeanviews.api.PropertyPath;
 import com.remondis.jbeanviews.api.TypeConversion;
 import com.remondis.jbeanviews.api.TypeConversion.TypeMappingBuilder;
@@ -25,13 +27,15 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     private TransitiveProperty sourceProperty;
     private TransitiveProperty viewProperty;
     private TypeConversion typeConversion;
+    private boolean collectionAttribute;
 
     public ViewBindingDeclaration(TransitiveProperty sourceProperty, TransitiveProperty viewProperty,
-        TypeConversion typeConversion) {
+        TypeConversion typeConversion, boolean collectionAttribute) {
       super();
       this.sourceProperty = sourceProperty;
       this.viewProperty = viewProperty;
       this.typeConversion = typeConversion;
+      this.collectionAttribute = collectionAttribute;
     }
 
     public TransitiveProperty getSourceProperty() {
@@ -44,6 +48,10 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
 
     public TypeConversion getTypeConversion() {
       return typeConversion;
+    }
+
+    public boolean isCollectionAttribute() {
+      return collectionAttribute;
     }
 
     @Override
@@ -80,6 +88,14 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     return new BeanViewAttributeBuilderImpl<S, O, V>(this, transitiveTypedProperty);
   }
 
+  @Override
+  public <O> BeanViewCollectionAttributeBuilder<S, O, V> bindCollection(
+      PropertyPath<Collection<O>, V> viewCollectionAttribute) {
+    TransitiveProperty transitiveTypedProperty = InvocationSensor.getTransitiveTypedProperty(viewType,
+        viewCollectionAttribute);
+    return new BeanViewCollectionAttributeBuilderImpl<S, O, V>(this, transitiveTypedProperty);
+  }
+
   /**
    * @return Returns the {@link BeanView} or throws an exception if the
    *         configuration does not lead to a complete mapping.
@@ -97,9 +113,10 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     return viewType;
   }
 
-  void addViewBinding(TransitiveProperty viewProperty, TransitiveProperty sourceProperty,
-      TypeConversion typeConversion) {
-    ViewBindingDeclaration declaration = new ViewBindingDeclaration(sourceProperty, viewProperty, typeConversion);
+  void addViewBinding(TransitiveProperty viewProperty, TransitiveProperty sourceProperty, TypeConversion typeConversion,
+      boolean collectionAttribute) {
+    ViewBindingDeclaration declaration = new ViewBindingDeclaration(sourceProperty, viewProperty, typeConversion,
+        collectionAttribute);
     viewBindings.add(declaration);
   }
 

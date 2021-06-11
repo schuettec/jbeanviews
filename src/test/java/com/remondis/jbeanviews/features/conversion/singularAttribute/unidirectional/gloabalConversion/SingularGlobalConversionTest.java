@@ -1,4 +1,4 @@
-package com.remondis.jbeanviews.features.conversion.unidirectional.gloabalTypeConversion;
+package com.remondis.jbeanviews.features.conversion.singularAttribute.unidirectional.gloabalConversion;
 
 import static com.remondis.jbeanviews.test.TestData.address;
 import static com.remondis.jbeanviews.test.TestData.customer;
@@ -13,7 +13,7 @@ import com.remondis.jbeanviews.api.BeanViews;
 import com.remondis.jbeanviews.test.data.Customer;
 import com.remondis.jbeanviews.test.views.ListSizeView;
 
-public class UnidirectionalConversionTest {
+public class SingularGlobalConversionTest {
 
   @Test
   public void shouldComplainAboutTypeConversion() {

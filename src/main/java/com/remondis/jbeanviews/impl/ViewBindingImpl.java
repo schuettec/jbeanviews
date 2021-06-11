@@ -22,13 +22,15 @@ public class ViewBindingImpl implements ViewBinding {
   protected TransitiveProperty viewProperty;
   protected TransitiveProperty sourceProperty;
   protected TypeConversion typeConversion;
+  private boolean collectionAttribute;
 
   public ViewBindingImpl(BeanViewImpl beanView, TransitiveProperty viewProperty, TransitiveProperty sourceProperty,
-      TypeConversion typeConversion) {
+      TypeConversion typeConversion, boolean collectionAttribute) {
     this.beanView = beanView;
     this.viewProperty = viewProperty;
     this.sourceProperty = sourceProperty;
     this.typeConversion = typeConversion;
+    this.collectionAttribute = collectionAttribute;
   }
 
   private boolean hasTypeConversion() {
@@ -77,7 +79,9 @@ public class ViewBindingImpl implements ViewBinding {
   @SuppressWarnings("unchecked")
   private Object _convert(Class<?> sourceType, Object sourceValue, Class<?> destinationType,
       GenericParameterContext sourceCtx, GenericParameterContext destinationCtx, boolean sourceToView) {
-    if (beanView.hasTypeConversion(sourceType, destinationType) || hasTypeConversion()) {
+    // The collection attribute predicate must be checked, because if true, the converCollection() method will do the
+    // job.
+    if (!collectionAttribute && (beanView.hasTypeConversion(sourceType, destinationType) || hasTypeConversion())) {
       return typeConversion(sourceType, sourceValue, destinationType, sourceToView);
     } else if (isMap(sourceValue)) {
       return convertMap(sourceValue, sourceCtx, destinationCtx, sourceToView);
@@ -288,7 +292,37 @@ public class ViewBindingImpl implements ViewBinding {
 
   @Override
   public String toString() {
-    return "View property '" + viewProperty + "' represents source property '" + sourceProperty + "'";
+    boolean globalTypeConversion = beanView.hasTypeConversion(sourceProperty.getPropertyType(),
+        viewProperty.getPropertyType());
+    String conversion = null;
+    if (hasTypeConversion()) {
+      conversion = " field conversion function ";
+    } else {
+      if (globalTypeConversion) {
+        conversion = " global conversion function ";
+      } else {
+        conversion = " reference (no conversion).";
+      }
+    }
+
+    String attributeType = null;
+    if (collectionAttribute) {
+      attributeType = "Plural ";
+    } else {
+      attributeType = "Singular ";
+    }
+
+    String applyMode = "";
+    if (hasTypeConversion() || globalTypeConversion) {
+      if (collectionAttribute) {
+        applyMode = " applied on collection elements.";
+      } else {
+        applyMode = " applied on single value.";
+      }
+    }
+
+    return attributeType + "view property '" + viewProperty + "' represents " + attributeType.toLowerCase()
+        + "source property '" + sourceProperty + "' mapped by" + conversion + applyMode;
   }
 
 }
