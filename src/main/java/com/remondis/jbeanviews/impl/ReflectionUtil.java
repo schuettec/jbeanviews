@@ -57,6 +57,7 @@ class ReflectionUtil {
     DEFAULT_VALUES = Collections.unmodifiableMap(map);
 
     BUILD_IN_TYPES = new HashSet<>();
+    BUILD_IN_TYPES.add(Object.class);
     BUILD_IN_TYPES.add(Boolean.class);
     BUILD_IN_TYPES.add(Character.class);
     BUILD_IN_TYPES.add(Byte.class);

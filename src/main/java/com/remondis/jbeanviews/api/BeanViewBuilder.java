@@ -12,6 +12,8 @@ public interface BeanViewBuilder<S, V> {
   public <O> BeanViewCollectionAttributeBuilder<S, O, V> bindCollection(
       PropertyPath<Collection<O>, V> viewCollectionAttribute);
 
+  BeanViewBuilder<S, V> omit(PropertyPath<?, V> viewAttribute);
+
   /**
    * @return Returns the {@link BeanView} or throws an exception if the
    *         configuration does not lead to a complete mapping.

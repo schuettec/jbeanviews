@@ -30,7 +30,7 @@ public class PluralGlobalConversionTest {
   private PersonConversion conversionFunction;
 
   @Test
-  public void shouldAutoConvertList() {
+  public void shouldConvertListUsingGlobalConversion() {
     doCallRealMethod().when(conversionFunction)
         .apply(any());
 

@@ -71,8 +71,14 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
 
   private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
     this.viewBindings = viewBindings.stream()
-        .map(declaration -> new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty(),
-            declaration.getTypeConversion(), declaration.isCollectionAttribute(), declaration.isThisBinding()))
+        .map(declaration -> {
+          if (declaration.isOmitViewProperty()) {
+            return new OmitViewBindingImpl(declaration.getViewProperty());
+          } else {
+            return new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty(),
+                declaration.getTypeConversion(), declaration.isCollectionAttribute(), declaration.isThisBinding());
+          }
+        })
         .collect(Collectors.toMap(ViewBinding::getViewPath, identity()));
   }
 
@@ -84,11 +90,6 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
 
     Map<String, TransitiveProperty> sourceProperties = getPropertiesRecursively(sourceType, sourceType, null,
         new LinkedList());
-
-    Set<Entry<String, TransitiveProperty>> debug = viewProperties.entrySet()
-        .stream()
-        .filter(entry -> !viewBindings.containsKey(entry.getKey()))
-        .collect(Collectors.toSet());
 
     // Find mappings by name and type, but skip already configured view bindings.
     Map<String, ViewBinding> implicitViewBindings = viewProperties.entrySet()
@@ -161,7 +162,9 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
             return asList(new TransitiveProperty(rootType, newPath, newReflectivePath));
           } else if (isBean(propertyType)) {
             String newPath = appendPath(path, pd);
-            return getPropertiesRecursively(rootType, propertyType, newPath, newReflectivePath).values();
+            Collection<TransitiveProperty> values = getPropertiesRecursively(rootType, propertyType, newPath,
+                newReflectivePath).values();
+            return values;
           } else {
             String newPath = appendPath(path, pd);
             return asList(new TransitiveProperty(rootType, newPath, newReflectivePath));

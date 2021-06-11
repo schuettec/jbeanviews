@@ -1,11 +1,12 @@
 package com.remondis.jbeanviews.api;
 
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -38,7 +39,7 @@ public interface BeanView<S, V> {
    * @return Returns a newly created list of view objects.
    */
   public default List<V> toView(List<? extends S> source) {
-    return toView(source);
+    return toView((Iterable<? extends S>) source);
   }
 
   /**
@@ -49,7 +50,9 @@ public interface BeanView<S, V> {
    * @return Returns a newly set list of view objects.
    */
   public default Set<V> toView(Set<? extends S> source) {
-    return toView(source);
+    return source.stream()
+        .map(this::toView)
+        .collect(toSet());
   }
 
   /**
@@ -63,7 +66,7 @@ public interface BeanView<S, V> {
   public default List<V> toView(Iterable<? extends S> iterable) {
     Stream<? extends S> stream = StreamSupport.stream(iterable.spliterator(), false);
     return stream.map(this::toView)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**

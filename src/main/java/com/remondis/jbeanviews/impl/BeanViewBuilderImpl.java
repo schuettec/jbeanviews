@@ -1,5 +1,7 @@
 package com.remondis.jbeanviews.impl;
 
+import static java.util.Objects.isNull;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -40,6 +42,11 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
       this.thisBinding = thisBinding;
     }
 
+    public boolean isOmitViewProperty() {
+      // The view binding declaration must be an omit view property binding if the source property is null
+      return isNull(sourceProperty);
+    }
+
     public TransitiveProperty getSourceProperty() {
       return sourceProperty;
     }
@@ -63,6 +70,10 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     @Override
     public String toString() {
       return "View property '" + viewProperty + "' -> source property '" + sourceProperty + "'";
+    }
+
+    public static ViewBindingDeclaration omit(TransitiveProperty viewProperty) {
+      return new ViewBindingDeclaration(null, viewProperty, null, false, false);
     }
 
   }
@@ -100,6 +111,13 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     TransitiveProperty transitiveTypedProperty = InvocationSensor.getTransitiveTypedProperty(viewType,
         viewCollectionAttribute);
     return new BeanViewCollectionAttributeBuilderImpl<S, O, V>(this, transitiveTypedProperty);
+  }
+
+  @Override
+  public BeanViewBuilder<S, V> omit(PropertyPath<?, V> viewAttribute) {
+    TransitiveProperty transitiveTypedProperty = InvocationSensor.getTransitiveTypedProperty(viewType, viewAttribute);
+    viewBindings.add(ViewBindingDeclaration.omit(transitiveTypedProperty));
+    return this;
   }
 
   /**

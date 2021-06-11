@@ -98,4 +98,10 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBui
     }
   }
 
+  @Override
+  public BeanViewBuilder<S, V> omit(PropertyPath<?, V> viewAttribute) {
+    _addBinding(null);
+    return beanViewBuilder.omit(viewAttribute);
+  }
+
 }
