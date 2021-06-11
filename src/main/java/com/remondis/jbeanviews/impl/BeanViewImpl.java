@@ -85,6 +85,11 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     Map<String, TransitiveProperty> sourceProperties = getPropertiesRecursively(sourceType, sourceType, null,
         new LinkedList());
 
+    Set<Entry<String, TransitiveProperty>> debug = viewProperties.entrySet()
+        .stream()
+        .filter(entry -> !viewBindings.containsKey(entry.getKey()))
+        .collect(Collectors.toSet());
+
     // Find mappings by name and type, but skip already configured view bindings.
     Map<String, ViewBinding> implicitViewBindings = viewProperties.entrySet()
         .stream()

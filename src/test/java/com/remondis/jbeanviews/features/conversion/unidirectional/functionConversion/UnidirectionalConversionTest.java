@@ -24,6 +24,7 @@ public class UnidirectionalConversionTest {
         .map(List::size)
         .bind(ListSizeView::getListSizeFieldBinding)
         .to(Customer::getAddresses)
+        .map(List::size)
         .get();
 
     Customer customer = customer().get();

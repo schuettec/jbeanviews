@@ -11,8 +11,7 @@ import com.remondis.jbeanviews.api.TypeConversion;
 import com.remondis.jbeanviews.api.TypeConversion.TypeMappingFunctionBuilder;
 import com.remondis.jbeanviews.api.TypeConversionBuilder;
 
-public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> extends BeanViewBuilderImpl<S, V>
-    implements BeanViewBuilderWithFunction<S, OO, O, V> {
+public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBuilderWithFunction<S, OO, O, V> {
 
   private BeanViewBuilderImpl<S, V> beanViewBuilder;
   private TransitiveProperty viewProperty;
@@ -20,36 +19,27 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> extends BeanViewBuilde
 
   public BeanViewBuilderWithFunctionImpl(BeanViewBuilderImpl<S, V> beanViewBuilder, TransitiveProperty sourceProperty,
       TransitiveProperty viewProperty) {
-    super(beanViewBuilder.getSourceType(), beanViewBuilder.getViewType());
     this.beanViewBuilder = beanViewBuilder;
     this.sourceProperty = sourceProperty;
     this.viewProperty = viewProperty;
   }
 
   @Override
-  public <O> BeanViewAttributeBuilder<S, O, V> bind(PropertyPath<O, V> viewAttribute) {
+  public BeanViewBuilderImpl<S, V> typeConversion(Function<TypeConversionBuilder, TypeConversion> conversionBuilder) {
     _addBinding();
-    return super.bind(viewAttribute);
+    return beanViewBuilder.typeConversion(conversionBuilder);
   }
 
   @Override
-  public BeanViewBuilderImpl<S, V> typeConversion(Function<TypeConversionBuilder, TypeConversion> conversionBuilder) {
+  public <O> BeanViewAttributeBuilder<S, O, V> bind(PropertyPath<O, V> viewAttribute) {
     _addBinding();
-    return super.typeConversion(conversionBuilder);
+    return beanViewBuilder.bind(viewAttribute);
   }
 
   @Override
   public BeanView<S, V> get() {
     _addBinding();
-    return super.get();
-  }
-
-  private void _addBinding() {
-    _addBinding(null);
-  }
-
-  private void _addBinding(TypeConversion<OO, O> typeConversion) {
-    beanViewBuilder.addViewBinding(viewProperty, sourceProperty, typeConversion);
+    return beanViewBuilder.get();
   }
 
   @Override
@@ -66,6 +56,14 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> extends BeanViewBuilde
         .andReverse(viewToSource);
     _addBinding(bidirectional);
     return beanViewBuilder;
+  }
+
+  private void _addBinding() {
+    _addBinding(null);
+  }
+
+  private void _addBinding(TypeConversion<OO, O> typeConversion) {
+    beanViewBuilder.addViewBinding(viewProperty, sourceProperty, typeConversion);
   }
 
   private TypeMappingFunctionBuilder<OO, O> typeConversion() {

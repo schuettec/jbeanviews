@@ -92,7 +92,7 @@ public class ViewBindingImpl implements ViewBinding {
       boolean sourceToView) {
     TypeConversion typeConversion = null;
     if (hasTypeConversion()) {
-      typeConversion = typeConversion;
+      typeConversion = this.typeConversion;
     } else {
       typeConversion = beanView.getTypeConversion(sourceType, destinationType);
     }
