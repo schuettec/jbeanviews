@@ -18,7 +18,6 @@ public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeB
   public <OO> BeanViewBuilder<S, V> to(PropertyPath<OO, S> sourceAttribute) {
     TransitiveProperty sourceProperty = InvocationSensor.getTransitiveTypedProperty(beanViewBuilder.getSourceType(),
         sourceAttribute);
-    // TODO: Extend API to add binding with a) unidirectional transformation b) bidirectional transformation.
     beanViewBuilder.addViewBinding(viewProperty, sourceProperty);
     return beanViewBuilder;
   }

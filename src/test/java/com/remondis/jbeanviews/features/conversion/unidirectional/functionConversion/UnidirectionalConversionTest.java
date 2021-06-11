@@ -1,4 +1,4 @@
-package com.remondis.jbeanviews.features.conversion.unidirectional;
+package com.remondis.jbeanviews.features.conversion.unidirectional.functionConversion;
 
 import static com.remondis.jbeanviews.test.TestData.address;
 import static com.remondis.jbeanviews.test.TestData.customer;
@@ -16,13 +16,9 @@ import com.remondis.jbeanviews.test.views.ListSizeView;
 public class UnidirectionalConversionTest {
 
   @Test
-  public void shouldComplainAboutTypeConversion() {
+  public void shouldConvertWithTypeConversion() {
     BeanView<Customer, ListSizeView> beanView = BeanViews.of(Customer.class)
         .toView(ListSizeView.class)
-        .typeConversion(conversion -> conversion.fromSource(List.class)
-            .toView(int.class)
-            .applying(List::size)
-            .unidirectional())
         .bind(ListSizeView::getListSizeTypeConversion)
         .to(Customer::getAddresses)
         .bind(ListSizeView::getListSizeFieldBinding)
