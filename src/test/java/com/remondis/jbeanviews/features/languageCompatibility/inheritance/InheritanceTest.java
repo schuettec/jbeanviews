@@ -27,8 +27,6 @@ public class InheritanceTest {
   public void shouldMapInheritedFields() {
     BeanView<Child, ChildResource> beanView = BeanViews.of(Child.class)
         .toView(ChildResource.class)
-        // .omitInSource(Child::getMoreInParent)
-        // .omitInDestination(ChildResource::getMoreInParentResource)
         .bind(ChildResource::getString)
         .to(Child::getString)
         .bind(childResource -> childResource.getB()

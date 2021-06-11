@@ -176,4 +176,8 @@ public class BeanViewException extends RuntimeException {
         "Cannot reverse map from view to source because the following type conversion is unidirectional only: "
             + tc.toString());
   }
+
+  public static BeanViewException alreadyOmitted(TransitiveProperty transitiveTypedProperty) {
+    return new BeanViewException("The view property is already omitted: " + transitiveTypedProperty.toString(true));
+  }
 }

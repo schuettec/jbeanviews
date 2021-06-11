@@ -1,6 +1,7 @@
 package com.remondis.jbeanviews.impl;
 
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -116,6 +117,13 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
   @Override
   public BeanViewBuilder<S, V> omit(PropertyPath<?, V> viewAttribute) {
     TransitiveProperty transitiveTypedProperty = InvocationSensor.getTransitiveTypedProperty(viewType, viewAttribute);
+    Set<TransitiveProperty> omittedProperties = viewBindings.stream()
+        .filter(binding -> binding.isOmitViewProperty())
+        .map(binding -> binding.getViewProperty())
+        .collect(toSet());
+    if (omittedProperties.contains(transitiveTypedProperty)) {
+      throw BeanViewException.alreadyOmitted(transitiveTypedProperty);
+    }
     viewBindings.add(ViewBindingDeclaration.omit(transitiveTypedProperty));
     return this;
   }
