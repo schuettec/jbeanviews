@@ -7,7 +7,6 @@ import static com.remondis.jbeanviews.impl.ReflectionUtil.isEqualTypes;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isWrapper;
 import static java.util.Objects.nonNull;
 
-import java.beans.PropertyDescriptor;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Map;
@@ -22,14 +21,16 @@ public class ViewBindingImpl implements ViewBinding {
   protected TransitiveProperty viewProperty;
   protected TransitiveProperty sourceProperty;
   protected TypeConversion typeConversion;
+  private boolean thisBinding;
   private boolean collectionAttribute;
 
   public ViewBindingImpl(BeanViewImpl beanView, TransitiveProperty viewProperty, TransitiveProperty sourceProperty,
-      TypeConversion typeConversion, boolean collectionAttribute) {
+      TypeConversion typeConversion, boolean collectionAttribute, boolean thisBinding) {
     this.beanView = beanView;
     this.viewProperty = viewProperty;
     this.sourceProperty = sourceProperty;
     this.typeConversion = typeConversion;
+    this.thisBinding = thisBinding;
     this.collectionAttribute = collectionAttribute;
   }
 
@@ -49,11 +50,21 @@ public class ViewBindingImpl implements ViewBinding {
 
   @Override
   public void getSourceValueAsViewValue(Object view, Object source) {
-    Object sourceValue = sourceProperty.get(source);
+    Object sourceValue = null;
+    if (thisBinding) {
+      sourceValue = source;
+    } else {
+      sourceValue = sourceProperty.get(source);
+    }
     if (nonNull(sourceValue)) {
-      GenericParameterContext sourceCtx = new GenericParameterContext(sourceProperty.getProperty()
-          .getReadMethod());
-      GenericParameterContext viewCtx = new GenericParameterContext(viewProperty.getProperty()
+      GenericParameterContext sourceCtx = null;
+      if (thisBinding) {
+        sourceCtx = GenericParameterContextImpl.ofNonGeneric(beanView.getSourceType());
+      } else {
+        sourceCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getProperty()
+            .getReadMethod());
+      }
+      GenericParameterContext viewCtx = GenericParameterContextImpl.ofMethod(viewProperty.getProperty()
           .getReadMethod());
       Object viewValue = _convert(sourceCtx.getCurrentType(), sourceValue, viewCtx.getCurrentType(), sourceCtx, viewCtx,
           true);
@@ -65,9 +76,9 @@ public class ViewBindingImpl implements ViewBinding {
   public void setViewValueAsSourceValue(Object view, Object source) {
     Object viewValue = viewProperty.get(source);
     if (nonNull(viewValue)) {
-      GenericParameterContext sourceCtx = new GenericParameterContext(sourceProperty.getProperty()
+      GenericParameterContext sourceCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getProperty()
           .getReadMethod());
-      GenericParameterContext viewCtx = new GenericParameterContext(viewProperty.getProperty()
+      GenericParameterContext viewCtx = GenericParameterContextImpl.ofMethod(viewProperty.getProperty()
           .getReadMethod());
       Object sourceValue = _convert(sourceCtx.getCurrentType(), viewValue, viewCtx.getCurrentType(), sourceCtx, viewCtx,
           false);
@@ -184,7 +195,7 @@ public class ViewBindingImpl implements ViewBinding {
     if (incompatibleCollecion) {
       // Check if there is a type conversion
       if (beanView.hasTypeConversion(sourceType, destinationType) || hasTypeConversion()) {
-        validateTypeMapping(sourceProperty.getProperty(), sourceType, viewProperty.getProperty(), destinationType);
+        validateTypeMapping(sourceType, destinationType);
         return;
       } else {
         throw incompatibleCollectionMapping(sourceProperty.getProperty(), sourceCtx, viewProperty.getProperty(),
@@ -206,7 +217,7 @@ public class ViewBindingImpl implements ViewBinding {
       GenericParameterContext destElemType = destCtx.goInto(0);
       _validateTransformation(sourceElemType, destElemType);
     } else {
-      validateTypeMapping(sourceProperty.getProperty(), sourceType, viewProperty.getProperty(), destinationType);
+      validateTypeMapping(sourceType, destinationType);
     }
   }
 
@@ -218,8 +229,7 @@ public class ViewBindingImpl implements ViewBinding {
     return !noCollectionOrMap(type);
   }
 
-  private void validateTypeMapping(PropertyDescriptor sourceProperty, Class<?> sourceType,
-      PropertyDescriptor destinationProperty, Class<?> destinationType) {
+  private void validateTypeMapping(Class<?> sourceType, Class<?> destinationType) {
     if (!isReferenceMapping(sourceType, destinationType)) {
       if (!hasTypeConversion() && !beanView.hasTypeConversion(sourceType, destinationType)) {
         // Try to auto-generate view for required type mapping.
@@ -249,10 +259,14 @@ public class ViewBindingImpl implements ViewBinding {
   public void validate() throws BeanViewException {
     // we have to check that all required mappers are known for nested mapping
     // if this transformation performs an object mapping, check for known mappers
-
-    GenericParameterContext sourceCtx = new GenericParameterContext(sourceProperty.getProperty()
-        .getReadMethod());
-    GenericParameterContext destCtx = new GenericParameterContext(viewProperty.getProperty()
+    GenericParameterContext sourceCtx = null;
+    if (thisBinding) {
+      sourceCtx = GenericParameterContextImpl.ofNonGeneric(beanView.getSourceType());
+    } else {
+      sourceCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getProperty()
+          .getReadMethod());
+    }
+    GenericParameterContext destCtx = GenericParameterContextImpl.ofMethod(viewProperty.getProperty()
         .getReadMethod());
 
     _validateTransformation(sourceCtx, destCtx);

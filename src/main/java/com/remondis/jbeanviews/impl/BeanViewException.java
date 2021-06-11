@@ -58,8 +58,8 @@ public class BeanViewException extends RuntimeException {
 
   static BeanViewException incompatibleCollectionMapping(PropertyDescriptor sourceProperty,
       GenericParameterContext sourceCtx, PropertyDescriptor destinationProperty, GenericParameterContext destCtx) {
-    GenericParameterContext rootSrcCtx = new GenericParameterContext(sourceProperty.getReadMethod());
-    GenericParameterContext rootDestCtx = new GenericParameterContext(destinationProperty.getReadMethod());
+    GenericParameterContext rootSrcCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getReadMethod());
+    GenericParameterContext rootDestCtx = GenericParameterContextImpl.ofMethod(destinationProperty.getReadMethod());
     StringBuilder builder = new StringBuilder("Incompatible nested collections found mapping\n\t");
     builder.append("Source ")
         .append(asString(sourceProperty))

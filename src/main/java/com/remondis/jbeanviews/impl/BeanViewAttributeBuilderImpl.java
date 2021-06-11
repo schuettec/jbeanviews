@@ -21,4 +21,9 @@ public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeB
     return new BeanViewBuilderWithFunctionImpl<>(beanViewBuilder, sourceProperty, viewProperty, false);
   }
 
+  @Override
+  public BeanViewBuilderWithFunction<S, S, O, V> toThis() {
+    return new BeanViewBuilderWithFunctionImpl<>(beanViewBuilder, viewProperty, false);
+  }
+
 }

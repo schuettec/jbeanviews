@@ -27,15 +27,17 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     private TransitiveProperty sourceProperty;
     private TransitiveProperty viewProperty;
     private TypeConversion typeConversion;
+    private boolean thisBinding;
     private boolean collectionAttribute;
 
     public ViewBindingDeclaration(TransitiveProperty sourceProperty, TransitiveProperty viewProperty,
-        TypeConversion typeConversion, boolean collectionAttribute) {
+        TypeConversion typeConversion, boolean collectionAttribute, boolean thisBinding) {
       super();
       this.sourceProperty = sourceProperty;
       this.viewProperty = viewProperty;
       this.typeConversion = typeConversion;
       this.collectionAttribute = collectionAttribute;
+      this.thisBinding = thisBinding;
     }
 
     public TransitiveProperty getSourceProperty() {
@@ -48,6 +50,10 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
 
     public TypeConversion getTypeConversion() {
       return typeConversion;
+    }
+
+    public boolean isThisBinding() {
+      return thisBinding;
     }
 
     public boolean isCollectionAttribute() {
@@ -114,9 +120,9 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
   }
 
   void addViewBinding(TransitiveProperty viewProperty, TransitiveProperty sourceProperty, TypeConversion typeConversion,
-      boolean collectionAttribute) {
+      boolean collectionAttribute, boolean thisBinding) {
     ViewBindingDeclaration declaration = new ViewBindingDeclaration(sourceProperty, viewProperty, typeConversion,
-        collectionAttribute);
+        collectionAttribute, thisBinding);
     viewBindings.add(declaration);
   }
 

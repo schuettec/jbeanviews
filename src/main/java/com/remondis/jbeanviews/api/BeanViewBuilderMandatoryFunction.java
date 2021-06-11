@@ -2,7 +2,8 @@ package com.remondis.jbeanviews.api;
 
 import java.util.function.Function;
 
-public interface BeanViewBuilderWithCollectionFunctionKANNWEGVLLT<S, OO, O, V> extends BeanViewBuilder<S, V> {
+public interface BeanViewBuilderMandatoryFunction<S, OO, O, V> {
+
   /**
    * Specifies an explicit conversion function for this property binding.
    *
@@ -13,7 +14,7 @@ public interface BeanViewBuilderWithCollectionFunctionKANNWEGVLLT<S, OO, O, V> e
 
   /**
    * Specifies explicit conversion function for this property for a bidirectional binding.
-   * 
+   *
    * @param sourceToView Source to view conversion function.
    * @param viewToSource View to source conversion function.
    * @return Returns the builder for further binding configuration.

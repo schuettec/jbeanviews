@@ -72,7 +72,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
     this.viewBindings = viewBindings.stream()
         .map(declaration -> new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty(),
-            declaration.getTypeConversion(), declaration.isCollectionAttribute()))
+            declaration.getTypeConversion(), declaration.isCollectionAttribute(), declaration.isThisBinding()))
         .collect(Collectors.toMap(ViewBinding::getViewPath, identity()));
   }
 
@@ -128,7 +128,10 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
             // TODO: Verify this!
             boolean isCollectionAttribute = isCollection(viewProperty.getPropertyType())
                 && isCollection(sourceProperty.getPropertyType());
-            return new ViewBindingImpl(this, viewProperty, sourceProperty, null, isCollectionAttribute);
+            // TODO: Verify this!
+            boolean isThisBinding = viewProperty.getPropertyType()
+                .equals(sourceType);
+            return new ViewBindingImpl(this, viewProperty, sourceProperty, null, isCollectionAttribute, isThisBinding);
           }
         })
         .collect(Collectors.toMap(ViewBinding::getViewPath, Function.identity()));
@@ -228,6 +231,11 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     if (!exceptions.isEmpty()) {
       throw BeanViewException.validateBindings(exceptions);
     }
+  }
+
+  @Override
+  public Class<S> getSourceType() {
+    return this.sourceType;
   }
 
 }

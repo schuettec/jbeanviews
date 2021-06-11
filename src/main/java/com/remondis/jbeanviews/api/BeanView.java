@@ -104,4 +104,9 @@ public interface BeanView<S, V> {
    * @return Returns the view type.
    */
   public Class<V> getViewType();
+
+  /**
+   * @return Returns the view type.
+   */
+  public Class<S> getSourceType();
 }

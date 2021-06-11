@@ -18,12 +18,22 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBui
   private BeanViewBuilderImpl<S, V> beanViewBuilder;
   private TransitiveProperty viewProperty;
   private TransitiveProperty sourceProperty;
+  private boolean thisBinding;
   private boolean collectionAttribute;
 
   public BeanViewBuilderWithFunctionImpl(BeanViewBuilderImpl<S, V> beanViewBuilder, TransitiveProperty sourceProperty,
       TransitiveProperty viewProperty, boolean collectionAttribute) {
     this.beanViewBuilder = beanViewBuilder;
+    this.thisBinding = false;
     this.sourceProperty = sourceProperty;
+    this.viewProperty = viewProperty;
+    this.collectionAttribute = collectionAttribute;
+  }
+
+  public BeanViewBuilderWithFunctionImpl(BeanViewBuilderImpl<S, V> beanViewBuilder, TransitiveProperty viewProperty,
+      boolean b) {
+    this.beanViewBuilder = beanViewBuilder;
+    this.thisBinding = true;
     this.viewProperty = viewProperty;
     this.collectionAttribute = collectionAttribute;
   }
@@ -74,12 +84,18 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBui
   }
 
   private void _addBinding(TypeConversion<OO, O> typeConversion) {
-    beanViewBuilder.addViewBinding(viewProperty, sourceProperty, typeConversion, collectionAttribute);
+    beanViewBuilder.addViewBinding(viewProperty, sourceProperty, typeConversion, collectionAttribute, thisBinding);
   }
 
   private TypeMappingFunctionBuilder<OO, O> typeConversion() {
-    return TypeConversion.from((Class<OO>) sourceProperty.getPropertyType())
-        .toView((Class<O>) viewProperty.getPropertyType());
+    if (thisBinding) {
+      return TypeConversion.from((Class<OO>) beanViewBuilder.getSourceType())
+          .toView((Class<O>) viewProperty.getPropertyType());
+
+    } else {
+      return TypeConversion.from((Class<OO>) sourceProperty.getPropertyType())
+          .toView((Class<O>) viewProperty.getPropertyType());
+    }
   }
 
 }
