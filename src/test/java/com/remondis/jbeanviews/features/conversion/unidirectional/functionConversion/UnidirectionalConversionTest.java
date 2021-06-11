@@ -16,33 +16,12 @@ import com.remondis.jbeanviews.test.views.ListSizeView;
 public class UnidirectionalConversionTest {
 
   @Test
-  public void shouldConvertWithTypeConversion() {
-    BeanView<Customer, ListSizeView> beanView = BeanViews.of(Customer.class)
-        .toView(ListSizeView.class)
-        .bind(ListSizeView::getListSizeTypeConversion)
-        .to(Customer::getAddresses)
-        .bind(ListSizeView::getListSizeFieldBinding)
-        .to(Customer::getAddresses)
-        .get();
-
-    Customer customer = customer().get();
-    customer.getAddresses()
-        .add(address().get());
-    ListSizeView view = beanView.toView(customer);
-    assertEquals(2, view.getListSizeFieldBinding());
-    assertEquals(2, view.getListSizeTypeConversion());
-  }
-
-  @Test
   public void shouldConvertListSize() {
     BeanView<Customer, ListSizeView> beanView = BeanViews.of(Customer.class)
         .toView(ListSizeView.class)
-        .typeConversion(conversion -> conversion.fromSource(List.class)
-            .toView(int.class)
-            .applying(List::size)
-            .unidirectional())
         .bind(ListSizeView::getListSizeTypeConversion)
         .to(Customer::getAddresses)
+        .map(List::size)
         .bind(ListSizeView::getListSizeFieldBinding)
         .to(Customer::getAddresses)
         .get();

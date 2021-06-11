@@ -24,11 +24,14 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
   static class ViewBindingDeclaration {
     private TransitiveProperty sourceProperty;
     private TransitiveProperty viewProperty;
+    private TypeConversion typeConversion;
 
-    public ViewBindingDeclaration(TransitiveProperty sourceProperty, TransitiveProperty viewProperty) {
+    public ViewBindingDeclaration(TransitiveProperty sourceProperty, TransitiveProperty viewProperty,
+        TypeConversion typeConversion) {
       super();
       this.sourceProperty = sourceProperty;
       this.viewProperty = viewProperty;
+      this.typeConversion = typeConversion;
     }
 
     public TransitiveProperty getSourceProperty() {
@@ -37,6 +40,10 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
 
     public TransitiveProperty getViewProperty() {
       return viewProperty;
+    }
+
+    public TypeConversion getTypeConversion() {
+      return typeConversion;
     }
 
     @Override
@@ -90,8 +97,9 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
     return viewType;
   }
 
-  void addViewBinding(TransitiveProperty viewProperty, TransitiveProperty sourceProperty) {
-    ViewBindingDeclaration declaration = new ViewBindingDeclaration(sourceProperty, viewProperty);
+  void addViewBinding(TransitiveProperty viewProperty, TransitiveProperty sourceProperty,
+      TypeConversion typeConversion) {
+    ViewBindingDeclaration declaration = new ViewBindingDeclaration(sourceProperty, viewProperty, typeConversion);
     viewBindings.add(declaration);
   }
 

@@ -1,5 +1,6 @@
 package com.remondis.jbeanviews.impl;
 
+import static com.remondis.jbeanviews.impl.BeanViewException.incompatibleCollectionMapping;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.getCollector;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isCollection;
 import static com.remondis.jbeanviews.impl.ReflectionUtil.isEqualTypes;
@@ -20,11 +21,18 @@ public class ViewBindingImpl implements ViewBinding {
   protected BeanViewImpl beanView;
   protected TransitiveProperty viewProperty;
   protected TransitiveProperty sourceProperty;
+  protected TypeConversion typeConversion;
 
-  public ViewBindingImpl(BeanViewImpl beanView, TransitiveProperty viewProperty, TransitiveProperty sourceProperty) {
+  public ViewBindingImpl(BeanViewImpl beanView, TransitiveProperty viewProperty, TransitiveProperty sourceProperty,
+      TypeConversion typeConversion) {
     this.beanView = beanView;
     this.viewProperty = viewProperty;
     this.sourceProperty = sourceProperty;
+    this.typeConversion = typeConversion;
+  }
+
+  private boolean hasTypeConversion() {
+    return nonNull(typeConversion);
   }
 
   @Override
@@ -69,7 +77,7 @@ public class ViewBindingImpl implements ViewBinding {
   @SuppressWarnings("unchecked")
   private Object _convert(Class<?> sourceType, Object sourceValue, Class<?> destinationType,
       GenericParameterContext sourceCtx, GenericParameterContext destinationCtx, boolean sourceToView) {
-    if (beanView.hasTypeConversion(sourceType, destinationType)) {
+    if (beanView.hasTypeConversion(sourceType, destinationType) || hasTypeConversion()) {
       return typeConversion(sourceType, sourceValue, destinationType, sourceToView);
     } else if (isMap(sourceValue)) {
       return convertMap(sourceValue, sourceCtx, destinationCtx, sourceToView);
@@ -82,7 +90,12 @@ public class ViewBindingImpl implements ViewBinding {
 
   private Object typeConversion(Class<?> sourceType, Object sourceValue, Class<?> destinationType,
       boolean sourceToView) {
-    TypeConversion typeConversion = beanView.getTypeConversion(sourceType, destinationType);
+    TypeConversion typeConversion = null;
+    if (hasTypeConversion()) {
+      typeConversion = typeConversion;
+    } else {
+      typeConversion = beanView.getTypeConversion(sourceType, destinationType);
+    }
     if (sourceToView) {
       return typeConversion.sourceToDestination(sourceValue);
     } else {
@@ -166,12 +179,12 @@ public class ViewBindingImpl implements ViewBinding {
 
     if (incompatibleCollecion) {
       // Check if there is a type conversion
-      if (beanView.hasTypeConversion(sourceType, destinationType)) {
+      if (beanView.hasTypeConversion(sourceType, destinationType) || hasTypeConversion()) {
         validateTypeMapping(sourceProperty.getProperty(), sourceType, viewProperty.getProperty(), destinationType);
         return;
       } else {
-        throw BeanViewException.incompatibleCollectionMapping(sourceProperty.getProperty(), sourceCtx,
-            viewProperty.getProperty(), destCtx);
+        throw incompatibleCollectionMapping(sourceProperty.getProperty(), sourceCtx, viewProperty.getProperty(),
+            destCtx);
       }
     }
     if (isMap(sourceType)) {
@@ -204,10 +217,7 @@ public class ViewBindingImpl implements ViewBinding {
   private void validateTypeMapping(PropertyDescriptor sourceProperty, Class<?> sourceType,
       PropertyDescriptor destinationProperty, Class<?> destinationType) {
     if (!isReferenceMapping(sourceType, destinationType)) {
-      if (beanView.hasTypeConversion(sourceType, destinationType)) {
-        // Check if there is a registered mapper if required.
-        beanView.getTypeConversion(sourceType, destinationType);
-      } else {
+      if (!hasTypeConversion() && !beanView.hasTypeConversion(sourceType, destinationType)) {
         // Try to auto-generate view for required type mapping.
         try {
           beanView.autoGenerateTypeConversion(sourceType, destinationType);

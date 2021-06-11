@@ -71,7 +71,8 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
 
   private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
     this.viewBindings = viewBindings.stream()
-        .map(declaration -> new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty()))
+        .map(declaration -> new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty(),
+            declaration.getTypeConversion()))
         .collect(Collectors.toMap(ViewBinding::getViewPath, identity()));
   }
 
@@ -119,7 +120,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
           } else {
             TransitiveProperty sourceProperty = candidates.iterator()
                 .next();
-            return new ViewBindingImpl(this, viewProperty, sourceProperty);
+            return new ViewBindingImpl(this, viewProperty, sourceProperty, null);
           }
         })
         .collect(Collectors.toMap(ViewBinding::getViewPath, Function.identity()));

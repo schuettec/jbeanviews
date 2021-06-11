@@ -1,7 +1,7 @@
 package com.remondis.jbeanviews.impl;
 
 import com.remondis.jbeanviews.api.BeanViewAttributeBuilder;
-import com.remondis.jbeanviews.api.BeanViewBuilder;
+import com.remondis.jbeanviews.api.BeanViewBuilderWithFunction;
 import com.remondis.jbeanviews.api.PropertyPath;
 
 public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeBuilder<S, O, V> {
@@ -15,10 +15,9 @@ public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeB
   }
 
   @Override
-  public <OO> BeanViewBuilder<S, V> to(PropertyPath<OO, S> sourceAttribute) {
+  public <OO> BeanViewBuilderWithFunction<S, OO, O, V> to(PropertyPath<OO, S> sourceAttribute) {
     TransitiveProperty sourceProperty = InvocationSensor.getTransitiveTypedProperty(beanViewBuilder.getSourceType(),
         sourceAttribute);
-    beanViewBuilder.addViewBinding(viewProperty, sourceProperty);
-    return beanViewBuilder;
+    return new BeanViewBuilderWithFunctionImpl<>(beanViewBuilder, sourceProperty, viewProperty);
   }
 }
