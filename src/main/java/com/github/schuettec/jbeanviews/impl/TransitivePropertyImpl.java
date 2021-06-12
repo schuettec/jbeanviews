@@ -11,22 +11,25 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-class TransitiveProperty {
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
+
+class TransitivePropertyImpl implements TransitiveProperty {
 
   private Class<?> rootType;
   private String path;
   private LinkedList<PropertyDescriptor> reflectivePath = new LinkedList<>();
 
-  TransitiveProperty(Class<?> rootType, String path, List<PropertyDescriptor> reflectivePath) {
+  TransitivePropertyImpl(Class<?> rootType, String path, List<PropertyDescriptor> reflectivePath) {
     super();
     this.path = path;
     this.reflectivePath = new LinkedList<>(reflectivePath);
   }
 
-  TransitiveProperty() {
+  TransitivePropertyImpl() {
     super();
   }
 
+  @Override
   public Object get(Object source) {
     Iterator<PropertyDescriptor> it = reflectivePath.iterator();
     Object value = source;
@@ -40,6 +43,7 @@ class TransitiveProperty {
     return value;
   }
 
+  @Override
   public void set(Object source, Object value) {
     Iterator<PropertyDescriptor> it = reflectivePath.iterator();
     Object toSet = source;
@@ -61,21 +65,24 @@ class TransitiveProperty {
   /**
    * @return Returns the leaf-property name of this transitive property.
    */
-  String getPropertyName() {
+  @Override
+  public String getPropertyName() {
     return getProperty().getName();
   }
 
   /**
    * @return Returns the leaf-property type of this transitive property.
    */
-  Class<?> getPropertyType() {
+  @Override
+  public Class<?> getPropertyType() {
     return getProperty().getPropertyType();
   }
 
   /**
    * @return Returns the leaf-property.
    */
-  PropertyDescriptor getProperty() {
+  @Override
+  public PropertyDescriptor getProperty() {
     return reflectivePath.getLast();
   }
 
@@ -85,11 +92,13 @@ class TransitiveProperty {
     return this;
   }
 
-  String getPath() {
+  @Override
+  public String getPath() {
     return path;
   }
 
-  List<PropertyDescriptor> getReflectivePath() {
+  @Override
+  public List<PropertyDescriptor> getReflectivePath() {
     return new LinkedList<>(reflectivePath);
   }
 
@@ -110,7 +119,7 @@ class TransitiveProperty {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    TransitiveProperty other = (TransitiveProperty) obj;
+    TransitivePropertyImpl other = (TransitivePropertyImpl) obj;
     if (path == null) {
       if (other.path != null)
         return false;
@@ -129,6 +138,7 @@ class TransitiveProperty {
     return path;
   }
 
+  @Override
   public String toString(boolean detailed) {
     if (detailed) {
       Method readMethod = getProperty().getReadMethod();

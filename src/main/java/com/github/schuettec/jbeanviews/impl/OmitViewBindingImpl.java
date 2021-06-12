@@ -1,5 +1,6 @@
 package com.github.schuettec.jbeanviews.impl;
 
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.ViewBinding;
 
 public class OmitViewBindingImpl implements ViewBinding {
@@ -30,6 +31,21 @@ public class OmitViewBindingImpl implements ViewBinding {
 
   @Override
   public void validate() throws BeanViewException {
+  }
+
+  @Override
+  public boolean isThisBinding() {
+    return false;
+  }
+
+  @Override
+  public boolean isCollectionAttribute() {
+    return false;
+  }
+
+  @Override
+  public boolean hasFieldConversion() {
+    return false;
   }
 
 }

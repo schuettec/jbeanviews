@@ -15,7 +15,7 @@ import com.github.schuettec.jbeanviews.test.data.leafTypes.Type;
 import com.github.schuettec.jbeanviews.test.views.CustomerView;
 import com.github.schuettec.jbeanviews.test.views.leafTypes.AddressView;
 
-public class ImplicitMappings {
+public class ImplicitMappingsTest {
 
   @Test
   public void shouldMapImplicitlyTransitively() {

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.TypeConversion;
 import com.github.schuettec.jbeanviews.api.ViewBinding;
 
@@ -34,7 +35,18 @@ public class ViewBindingImpl implements ViewBinding {
     this.collectionAttribute = collectionAttribute;
   }
 
-  private boolean hasTypeConversion() {
+  @Override
+  public boolean isThisBinding() {
+    return thisBinding;
+  }
+
+  @Override
+  public boolean isCollectionAttribute() {
+    return collectionAttribute;
+  }
+
+  @Override
+  public boolean hasFieldConversion() {
     return nonNull(typeConversion);
   }
 
@@ -92,7 +104,7 @@ public class ViewBindingImpl implements ViewBinding {
       GenericParameterContext sourceCtx, GenericParameterContext destinationCtx, boolean sourceToView) {
     // The collection attribute predicate must be checked, because if true, the converCollection() method will do the
     // job.
-    if (!collectionAttribute && (beanView.hasTypeConversion(sourceType, destinationType) || hasTypeConversion())) {
+    if (!collectionAttribute && (beanView.hasTypeConversion(sourceType, destinationType) || hasFieldConversion())) {
       return typeConversion(sourceType, sourceValue, destinationType, sourceToView);
     } else if (isMap(sourceValue)) {
       return convertMap(sourceValue, sourceCtx, destinationCtx, sourceToView);
@@ -106,7 +118,7 @@ public class ViewBindingImpl implements ViewBinding {
   private Object typeConversion(Class<?> sourceType, Object sourceValue, Class<?> destinationType,
       boolean sourceToView) {
     TypeConversion typeConversion = null;
-    if (hasTypeConversion()) {
+    if (hasFieldConversion()) {
       typeConversion = this.typeConversion;
     } else {
       typeConversion = beanView.getTypeConversion(sourceType, destinationType);
@@ -194,7 +206,7 @@ public class ViewBindingImpl implements ViewBinding {
 
     if (incompatibleCollecion) {
       // Check if there is a type conversion
-      if (beanView.hasTypeConversion(sourceType, destinationType) || hasTypeConversion()) {
+      if (beanView.hasTypeConversion(sourceType, destinationType) || hasFieldConversion()) {
         validateTypeMapping(sourceType, destinationType);
         return;
       } else {
@@ -231,7 +243,7 @@ public class ViewBindingImpl implements ViewBinding {
 
   private void validateTypeMapping(Class<?> sourceType, Class<?> destinationType) {
     if (!isReferenceMapping(sourceType, destinationType)) {
-      if (!hasTypeConversion() && !beanView.hasTypeConversion(sourceType, destinationType)) {
+      if (!hasFieldConversion() && !beanView.hasTypeConversion(sourceType, destinationType)) {
         // Try to auto-generate view for required type mapping.
         try {
           beanView.autoGenerateTypeConversion(sourceType, destinationType);
@@ -309,7 +321,7 @@ public class ViewBindingImpl implements ViewBinding {
     boolean globalTypeConversion = beanView.hasTypeConversion(sourceProperty.getPropertyType(),
         viewProperty.getPropertyType());
     String conversion = null;
-    if (hasTypeConversion()) {
+    if (hasFieldConversion()) {
       conversion = " field conversion function ";
     } else {
       if (globalTypeConversion) {
@@ -327,7 +339,7 @@ public class ViewBindingImpl implements ViewBinding {
     }
 
     String applyMode = "";
-    if (hasTypeConversion() || globalTypeConversion) {
+    if (hasFieldConversion() || globalTypeConversion) {
       if (collectionAttribute) {
         applyMode = " applied on collection elements.";
       } else {

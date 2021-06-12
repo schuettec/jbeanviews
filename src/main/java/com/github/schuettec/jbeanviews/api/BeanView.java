@@ -112,4 +112,9 @@ public interface BeanView<S, V> {
    * @return Returns the view type.
    */
   public Class<S> getSourceType();
+
+  /**
+   * Returns a new view model representing the configured bindings.
+   */
+  public ViewModel<S, V> getViewModel();
 }

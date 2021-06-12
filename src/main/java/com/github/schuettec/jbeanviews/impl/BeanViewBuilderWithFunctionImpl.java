@@ -9,6 +9,7 @@ import com.github.schuettec.jbeanviews.api.BeanViewBuilder;
 import com.github.schuettec.jbeanviews.api.BeanViewBuilderWithFunction;
 import com.github.schuettec.jbeanviews.api.BeanViewCollectionAttributeBuilder;
 import com.github.schuettec.jbeanviews.api.PropertyPath;
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.TypeConversion;
 import com.github.schuettec.jbeanviews.api.TypeConversion.TypeMappingFunctionBuilder;
 import com.github.schuettec.jbeanviews.api.TypeConversionBuilder;

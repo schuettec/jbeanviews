@@ -3,6 +3,7 @@ package com.github.schuettec.jbeanviews.impl;
 import com.github.schuettec.jbeanviews.api.BeanViewAttributeBuilder;
 import com.github.schuettec.jbeanviews.api.BeanViewBuilderWithFunction;
 import com.github.schuettec.jbeanviews.api.PropertyPath;
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 
 public class BeanViewAttributeBuilderImpl<S, O, V> implements BeanViewAttributeBuilder<S, O, V> {
 

@@ -14,7 +14,6 @@ import static java.util.stream.Collectors.toMap;
 
 import java.beans.PropertyDescriptor;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,9 +26,11 @@ import java.util.stream.Collectors;
 
 import com.github.schuettec.jbeanviews.api.BeanView;
 import com.github.schuettec.jbeanviews.api.BeanViews;
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.TypeConversion;
 import com.github.schuettec.jbeanviews.api.TypeConversionKey;
 import com.github.schuettec.jbeanviews.api.ViewBinding;
+import com.github.schuettec.jbeanviews.api.ViewModel;
 import com.github.schuettec.jbeanviews.impl.BeanViewBuilderImpl.ViewBindingDeclaration;
 
 public class BeanViewImpl<S, V> implements BeanView<S, V> {
@@ -162,7 +163,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
           newReflectivePath.add(pd);
           if (isCollection(pd.getPropertyType())) {
             String newPath = appendPath(path, pd);
-            return asList(new TransitiveProperty(rootType, newPath, newReflectivePath));
+            return asList(new TransitivePropertyImpl(rootType, newPath, newReflectivePath));
           } else if (isBean(propertyType)) {
             String newPath = appendPath(path, pd);
             Collection<TransitiveProperty> values = getPropertiesRecursively(rootType, propertyType, newPath,
@@ -170,7 +171,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
             return values;
           } else {
             String newPath = appendPath(path, pd);
-            return asList(new TransitiveProperty(rootType, newPath, newReflectivePath));
+            return asList(new TransitivePropertyImpl(rootType, newPath, newReflectivePath));
           }
         })
         .flatMap(Collection::stream)
@@ -209,8 +210,8 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     return viewType;
   }
 
-  Set<ViewBinding> getViewBindings() {
-    return new HashSet<>(viewBindings.values());
+  Map<String, ViewBinding> getViewBindings() {
+    return new Hashtable<>(viewBindings);
   }
 
   <T1, T2> void autoGenerateTypeConversion(Class<T1> sourceType, Class<T2> destinationType) {
@@ -242,6 +243,11 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   @Override
   public Class<S> getSourceType() {
     return this.sourceType;
+  }
+
+  @Override
+  public ViewModel<S, V> getViewModel() {
+    return new ViewModelImpl<>(this);
   }
 
 }

@@ -22,17 +22,18 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.github.schuettec.jbeanviews.api.PropertyPath;
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.impl.BeanViewException.NotAValidPropertyPathException;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
 import net.sf.cglib.proxy.UndeclaredThrowableException;
 
-public class InvocationSensor<T> {
+class InvocationSensor<T> {
 
   private T proxyObject;
 
-  private TransitiveProperty transitiveProperty;
+  private TransitivePropertyImpl transitiveProperty;
 
   private Class<T> superType;
 
@@ -61,7 +62,7 @@ public class InvocationSensor<T> {
           denyNoReturnType(method);
           PropertyDescriptor property = resolveProperty(method);
           if (isNull(transitiveProperty)) {
-            transitiveProperty = new TransitiveProperty();
+            transitiveProperty = new TransitivePropertyImpl();
           }
           transitiveProperty.add(property);
           // schuettec - For getter, return a new enhancer

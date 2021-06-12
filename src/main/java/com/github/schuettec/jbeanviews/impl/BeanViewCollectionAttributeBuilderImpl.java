@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.github.schuettec.jbeanviews.api.BeanViewBuilderWithFunction;
 import com.github.schuettec.jbeanviews.api.BeanViewCollectionAttributeBuilder;
 import com.github.schuettec.jbeanviews.api.PropertyPath;
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 
 public class BeanViewCollectionAttributeBuilderImpl<S, O, V> implements BeanViewCollectionAttributeBuilder<S, O, V> {
 

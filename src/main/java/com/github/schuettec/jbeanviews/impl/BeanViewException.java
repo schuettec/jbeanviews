@@ -1,12 +1,14 @@
 package com.github.schuettec.jbeanviews.impl;
 
 import static com.github.schuettec.jbeanviews.impl.Properties.asString;
+import static java.util.Objects.nonNull;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
+import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.TypeConversion;
 
 public class BeanViewException extends RuntimeException {
@@ -98,6 +100,15 @@ public class BeanViewException extends RuntimeException {
         + "\n\tEither specify a custom mapping or specify a type conversion to apply an implicit mapping for properties with the same name.\n"
         + (possibleCandidates.isEmpty() ? "\tDid not find any candidates as source property."
             : "Candidates for source properties are:\n" + possibleCandidates));
+  }
+
+  static BeanViewException noSuchBindingFor(TransitiveProperty property, boolean sourceProperty) {
+    String propertyType = sourceProperty ? "source" : "view";
+    String propertyMessage = ".";
+    if (nonNull(property)) {
+      propertyMessage = " " + property.toString(true) + propertyMessage;
+    }
+    return new BeanViewException("No binding found for " + propertyType + propertyMessage);
   }
 
   static BeanViewException ambiguousBindingForProperties(TransitiveProperty viewProperty, String possibleCandidates) {

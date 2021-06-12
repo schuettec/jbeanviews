@@ -3,13 +3,21 @@ package com.github.schuettec.jbeanviews.api;
 import com.github.schuettec.jbeanviews.impl.BeanViewException;
 
 public interface ViewBinding {
-  public String getViewPath();
 
-  public String getSourcePath();
+  boolean isThisBinding();
 
-  public void getSourceValueAsViewValue(Object view, Object source);
+  boolean isCollectionAttribute();
 
-  public void setViewValueAsSourceValue(Object view, Object source);
+  boolean hasFieldConversion();
 
-  public void validate() throws BeanViewException;
+  String getViewPath();
+
+  String getSourcePath();
+
+  void getSourceValueAsViewValue(Object view, Object source);
+
+  void setViewValueAsSourceValue(Object view, Object source);
+
+  void validate() throws BeanViewException;
+
 }
