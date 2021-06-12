@@ -3,17 +3,17 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.remondis</groupId>
+    <groupId>com.github.schuettec</groupId>
     <artifactId>jbeanviews</artifactId>
     <version>4.2.5</version>
     <packaging>jar</packaging>
     <name>J Bean Views</name>
     <description>A mapping library for building bean views.</description>
-    <url>https://github.com/remondis-it/jbeanviews</url>
+    <url>https://github.com/schuettec/jbeanviews</url>
     <scm>
-        <connection>scm:git:https://github.com/remondis-it/jbeanviews.git</connection>
-        <developerConnection>scm:git:git@github.com:remondis-it/jbeanviews.git</developerConnection>
-        <url>https://github.com/remondis-it/jbeanviews.git</url>
+        <connection>scm:git:https://github.com/schuettec/jbeanviews.git</connection>
+        <developerConnection>scm:git:git@github.com:schuettec/jbeanviews.git</developerConnection>
+        <url>https://github.com/schuettec/jbeanviews.git</url>
     </scm>
     <licenses>
         <license>
@@ -25,7 +25,7 @@
         <developer>
             <id>schuettec</id>
             <name>Christopher Schütte</name>
-            <email>christopher.schuette@remondis.de</email>
+            <email>cschue88@gmail.com</email>
             <roles>
                 <role>developer</role>
             </roles>
@@ -42,7 +42,7 @@
         <repository>
             <id>bintray-schuettec-maven</id>
             <name>schuettec-maven</name>
-            <url>https://api.bintray.com/maven/schuettec/maven/com.remondis:jbeanviews/;publish=1</url>
+            <url>https://api.bintray.com/maven/schuettec/maven/com.github.schuettec:jbeanviews/;publish=1</url>
         </repository>
     </distributionManagement>
     <build>
@@ -88,10 +88,9 @@
                                 <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                             </manifest>
                             <manifestEntries>
-                                <Bundle-Vendor>REMONDIS IT Services GmbH
-                                    &amp; Co. KG</Bundle-Vendor>
-                                <Bundle-DocURL>https://github.com/remondis-it/remap</Bundle-DocURL>
-                                <Automatic-Module-Name>com.remondis.jbeanviews</Automatic-Module-Name>
+                                <Bundle-Vendor>Christopher Schütte</Bundle-Vendor>
+                                <Bundle-DocURL>https://github.com/schuettec/remap</Bundle-DocURL>
+                                <Automatic-Module-Name>com.github.schuettec.jbeanviews</Automatic-Module-Name>
                             </manifestEntries>
                         </archive>
                     </configuration>
