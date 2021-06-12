@@ -48,4 +48,24 @@ public class OmitViewBindingImpl implements ViewBinding {
     return false;
   }
 
+  @Override
+  public TransitiveProperty getViewProperty() {
+    return viewProperty;
+  }
+
+  @Override
+  public TransitiveProperty getSourceProperty() {
+    throw new UnsupportedOperationException("An omit view binding does not have a source property!");
+  }
+
+  @Override
+  public Object toViewValue(Object sourceValue) {
+    throw new UnsupportedOperationException("An omit view binding cannot perform a conversion!");
+  }
+
+  @Override
+  public Object toSourceValue(Object viewValue) {
+    throw new UnsupportedOperationException("An omit view binding cannot perform a conversion!");
+  }
+
 }

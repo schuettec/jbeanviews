@@ -250,4 +250,24 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     return new ViewModelImpl<>(this);
   }
 
+  boolean isViewSubPath(String partialPath) {
+    return viewBindings.values()
+        .stream()
+        .filter(binding -> binding.getViewPath()
+            .contains(partialPath))
+        .filter(binding -> !binding.getViewPath()
+            .equals(partialPath))
+        .findFirst()
+        .isPresent();
+  }
+
+  boolean isViewPropertyPath(String path) {
+    return viewBindings.values()
+        .stream()
+        .filter(binding -> binding.getViewPath()
+            .equals(path))
+        .findFirst()
+        .isPresent();
+  }
+
 }

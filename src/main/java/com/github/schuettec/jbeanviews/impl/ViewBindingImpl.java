@@ -68,35 +68,48 @@ public class ViewBindingImpl implements ViewBinding {
     } else {
       sourceValue = sourceProperty.get(source);
     }
+    Object viewValue = null;
     if (nonNull(sourceValue)) {
-      GenericParameterContext sourceCtx = null;
-      if (thisBinding) {
-        sourceCtx = GenericParameterContextImpl.ofNonGeneric(beanView.getSourceType());
-      } else {
-        sourceCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getProperty()
-            .getReadMethod());
-      }
-      GenericParameterContext viewCtx = GenericParameterContextImpl.ofMethod(viewProperty.getProperty()
-          .getReadMethod());
-      Object viewValue = _convert(sourceCtx.getCurrentType(), sourceValue, viewCtx.getCurrentType(), sourceCtx, viewCtx,
-          true);
+      viewValue = toViewValue(sourceValue);
       viewProperty.set(view, viewValue);
     }
   }
 
   @Override
+  public Object toViewValue(Object sourceValue) {
+    Object viewValue;
+    GenericParameterContext sourceCtx = null;
+    if (thisBinding) {
+      sourceCtx = GenericParameterContextImpl.ofNonGeneric(beanView.getSourceType());
+    } else {
+      sourceCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getProperty()
+          .getReadMethod());
+    }
+    GenericParameterContext viewCtx = GenericParameterContextImpl.ofMethod(viewProperty.getProperty()
+        .getReadMethod());
+    viewValue = _convert(sourceCtx.getCurrentType(), sourceValue, viewCtx.getCurrentType(), sourceCtx, viewCtx, true);
+    return viewValue;
+  }
+
+  @Override
   public void setViewValueAsSourceValue(Object view, Object source) {
     Object viewValue = viewProperty.get(source);
+    Object sourceValue = null;
     if (nonNull(viewValue)) {
-      GenericParameterContext sourceCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getProperty()
-          .getReadMethod());
-      GenericParameterContext viewCtx = GenericParameterContextImpl.ofMethod(viewProperty.getProperty()
-          .getReadMethod());
-      Object sourceValue = _convert(sourceCtx.getCurrentType(), viewValue, viewCtx.getCurrentType(), sourceCtx, viewCtx,
-          false);
+      sourceValue = toSourceValue(viewValue);
       sourceProperty.set(source, sourceValue);
     }
+  }
 
+  @Override
+  public Object toSourceValue(Object viewValue) {
+    Object sourceValue;
+    GenericParameterContext sourceCtx = GenericParameterContextImpl.ofMethod(sourceProperty.getProperty()
+        .getReadMethod());
+    GenericParameterContext viewCtx = GenericParameterContextImpl.ofMethod(viewProperty.getProperty()
+        .getReadMethod());
+    sourceValue = _convert(sourceCtx.getCurrentType(), viewValue, viewCtx.getCurrentType(), sourceCtx, viewCtx, false);
+    return sourceValue;
   }
 
   @SuppressWarnings("unchecked")
@@ -349,6 +362,16 @@ public class ViewBindingImpl implements ViewBinding {
 
     return attributeType + "view property '" + viewProperty + "' represents " + attributeType.toLowerCase()
         + "source property '" + sourceProperty + "' mapped by" + conversion + applyMode;
+  }
+
+  @Override
+  public TransitiveProperty getViewProperty() {
+    return this.viewProperty;
+  }
+
+  @Override
+  public TransitiveProperty getSourceProperty() {
+    return this.sourceProperty;
   }
 
 }

@@ -70,4 +70,14 @@ class ViewModelImpl<S, V> implements ViewModel<S, V> {
     }
   }
 
+  @Override
+  public boolean isViewSubPath(String partialPath) {
+    return beanView.isViewSubPath(partialPath);
+  }
+
+  @Override
+  public boolean isViewPropertyPath(String path) {
+    return beanView.isViewPropertyPath(path);
+  }
+
 }
