@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.schuettec</groupId>
     <artifactId>jbeanviews</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
     <name>J Bean Views</name>
     <description>A mapping library for building bean views.</description>
