@@ -152,4 +152,9 @@ class TransitivePropertyImpl implements TransitiveProperty {
     }
   }
 
+  @Override
+  public int getLevel() {
+    return reflectivePath.size();
+  }
+
 }

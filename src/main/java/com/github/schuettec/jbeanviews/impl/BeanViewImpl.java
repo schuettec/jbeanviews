@@ -8,9 +8,11 @@ import static com.github.schuettec.jbeanviews.impl.ReflectionUtil.isBean;
 import static com.github.schuettec.jbeanviews.impl.ReflectionUtil.isCollection;
 import static com.github.schuettec.jbeanviews.impl.ReflectionUtil.isEqualTypes;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 import java.beans.PropertyDescriptor;
 import java.util.Collection;
@@ -22,7 +24,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import com.github.schuettec.jbeanviews.api.BeanView;
 import com.github.schuettec.jbeanviews.api.BeanViews;
@@ -81,17 +82,17 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
                 declaration.getTypeConversion(), declaration.isCollectionAttribute(), declaration.isThisBinding());
           }
         })
-        .collect(Collectors.toMap(ViewBinding::getViewPath, identity()));
+        .collect(toMap(ViewBinding::getViewPath, identity()));
   }
 
   private void createImplicitViewBindings() {
 
     // Build type map for source
     Map<String, TransitiveProperty> viewProperties = getPropertiesRecursively(viewType, viewType, null,
-        new LinkedList());
+        new LinkedList(), Target.VIEW);
 
     Map<String, TransitiveProperty> sourceProperties = getPropertiesRecursively(sourceType, sourceType, null,
-        new LinkedList());
+        new LinkedList(), Target.SOURCE);
 
     // Find mappings by name and type, but skip already configured view bindings.
     Map<String, ViewBinding> implicitViewBindings = viewProperties.entrySet()
@@ -110,7 +111,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
                 Class<?> sourcePropertyType = sourceTp.getPropertyType();
                 boolean namesEqual = viewPropertyName.equals(sourcePropertyName);
                 // Names must be equal
-                return namesEqual &&
+                boolean candidateWins = namesEqual &&
                 // and either types equal
                 ((isEqualTypes(viewPropertyType, sourcePropertyType)
                     || ReflectionUtil.isWrapper(viewPropertyType, sourcePropertyType)
@@ -119,29 +120,50 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
                 isCollection(viewPropertyType) ||
                 // or a type conversion is available
                 typeConversions.containsKey(new TypeConversionKey<>(sourcePropertyType, viewPropertyType)));
+                return candidateWins;
               })
-              .collect(Collectors.toSet());
+              .collect(toSet());
           if (candidates.isEmpty()) {
             throw noSourcePropertyFor(viewProperty,
                 getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
           } else if (candidates.size() > 1) {
-            throw ambiguousBindingForProperties(viewProperty,
-                getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
+            Set<TransitiveProperty> sameLevelCandidates = getSameLevelCandidates(viewProperty, candidates);
+            if (sameLevelCandidates.isEmpty() || sameLevelCandidates.size() > 1) {
+              throw ambiguousBindingForProperties(viewProperty,
+                  getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
+            } else {
+              TransitiveProperty sourceProperty = candidates.iterator()
+                  .next();
+              return createViewBinding(viewProperty, sourceProperty);
+            }
           } else {
             TransitiveProperty sourceProperty = candidates.iterator()
                 .next();
-            // TODO: Verify this!
-            boolean isCollectionAttribute = isCollection(viewProperty.getPropertyType())
-                && isCollection(sourceProperty.getPropertyType());
-            // TODO: Verify this!
-            boolean isThisBinding = viewProperty.getPropertyType()
-                .equals(sourceType);
-            return new ViewBindingImpl(this, viewProperty, sourceProperty, null, isCollectionAttribute, isThisBinding);
+            return createViewBinding(viewProperty, sourceProperty);
           }
         })
-        .collect(Collectors.toMap(ViewBinding::getViewPath, Function.identity()));
+        .collect(toMap(ViewBinding::getViewPath, Function.identity()));
 
     viewBindings.putAll(implicitViewBindings);
+  }
+
+  private Set<TransitiveProperty> getSameLevelCandidates(TransitiveProperty viewProperty,
+      Set<TransitiveProperty> candidates) {
+    int viewPropertyLevel = viewProperty.getLevel();
+    Set<TransitiveProperty> sameLevelCandidates = candidates.stream()
+        .filter(sourceProperty -> viewPropertyLevel == sourceProperty.getLevel())
+        .collect(toSet());
+    return sameLevelCandidates;
+  }
+
+  private ViewBindingImpl createViewBinding(TransitiveProperty viewProperty, TransitiveProperty sourceProperty) {
+    // TODO: Verify this!
+    boolean isCollectionAttribute = isCollection(viewProperty.getPropertyType())
+        && isCollection(sourceProperty.getPropertyType());
+    // TODO: Verify this!
+    boolean isThisBinding = viewProperty.getPropertyType()
+        .equals(sourceType);
+    return new ViewBindingImpl(this, viewProperty, sourceProperty, null, isCollectionAttribute, isThisBinding);
   }
 
   private String getSourcePropertyCandidatesPresentableMessage(String viewPropertyName,
@@ -153,8 +175,13 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
         .collect(joining(",\n"));
   }
 
+  enum Target {
+    SOURCE,
+    VIEW;
+  }
+
   private Map<String, TransitiveProperty> getPropertiesRecursively(Class<?> rootType, Class<?> currentType, String path,
-      List<PropertyDescriptor> reflectivePath) {
+      List<PropertyDescriptor> reflectivePath, Target target) {
     return Properties.getProperties(currentType)
         .stream()
         .map(pd -> {
@@ -166,9 +193,18 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
             return asList(new TransitivePropertyImpl(rootType, newPath, newReflectivePath));
           } else if (isBean(propertyType)) {
             String newPath = appendPath(path, pd);
-            Collection<TransitiveProperty> values = getPropertiesRecursively(rootType, propertyType, newPath,
-                newReflectivePath).values();
-            return values;
+            /*
+             * If the bean is part of a type conversion (source for source property, dest for view property),
+             * don't add the properties of this bean. Use the bean as property instead.
+             */
+            if (hasTypeConversion(target, propertyType)) {
+              // TODO: also add the current reference as property, because otherwise only attribute mapping is possible.
+              return asList(new TransitivePropertyImpl(rootType, newPath, newReflectivePath));
+            } else {
+              Collection<TransitiveProperty> values = getPropertiesRecursively(rootType, propertyType, newPath,
+                  newReflectivePath, target).values();
+              return values;
+            }
           } else {
             String newPath = appendPath(path, pd);
             return asList(new TransitivePropertyImpl(rootType, newPath, newReflectivePath));
@@ -176,6 +212,31 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
         })
         .flatMap(Collection::stream)
         .collect(toMap(TransitiveProperty::getPath, identity()));
+  }
+
+  /**
+   * @param target The target type.
+   * @param type The type to check. For <tt>target=source</tt> it will be checked if there is a type conversion having
+   *        the specified source type, for target <tt>target=view</tt> if there is one having the specified view type.
+   * @return Returns <code>true</code> if there is a known type conversion having the specified type for target.
+   */
+  @SuppressWarnings("unchecked")
+  private boolean hasTypeConversion(Target target, Class<?> type) {
+    requireNonNull(target, "Target must not be null!");
+    requireNonNull(type, "Type must not be null!");
+    if (target == Target.SOURCE) {
+      return typeConversions.values()
+          .stream()
+          .filter(typeConversion -> typeConversion.hasSource(type))
+          .findFirst()
+          .isPresent();
+    } else {
+      return typeConversions.values()
+          .stream()
+          .filter(typeConversion -> typeConversion.hasDestination(type))
+          .findFirst()
+          .isPresent();
+    }
   }
 
   boolean hasTypeConversion(Class<?> sourceType, Class<?> viewType) {

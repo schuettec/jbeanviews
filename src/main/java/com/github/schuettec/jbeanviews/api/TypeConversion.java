@@ -185,4 +185,12 @@ public class TypeConversion<S, D> {
     return "Conversion from " + source.getName() + "to " + destination.getName();
   }
 
+  public boolean hasSource(Class<?> type) {
+    return source.equals(type);
+  }
+
+  public boolean hasDestination(Class<?> type) {
+    return destination.equals(type);
+  }
+
 }

@@ -96,10 +96,19 @@ public class BeanViewException extends RuntimeException {
   }
 
   static BeanViewException noSourcePropertyFor(TransitiveProperty viewProperty, String possibleCandidates) {
+    possibleCandidates = tabLines(true, possibleCandidates);
     return new BeanViewException("Cannot find a matching source property for:\n\t" + viewProperty.toString(true)
         + "\n\tEither specify a custom mapping or specify a type conversion to apply an implicit mapping for properties with the same name.\n"
         + (possibleCandidates.isEmpty() ? "\tDid not find any candidates as source property."
-            : "Candidates for source properties are:\n" + possibleCandidates));
+            : "\tCandidates for source properties are:\n" + possibleCandidates));
+  }
+
+  private static String tabLines(boolean asList, String possibleCandidates) {
+    if (!possibleCandidates.isEmpty()) {
+      return "\t" + (asList ? "- " : "") + possibleCandidates.replace("\n", "\n\t" + (asList ? "- " : ""));
+    } else {
+      return possibleCandidates;
+    }
   }
 
   static BeanViewException noSuchBindingFor(TransitiveProperty property, boolean sourceProperty) {
@@ -112,9 +121,10 @@ public class BeanViewException extends RuntimeException {
   }
 
   static BeanViewException ambiguousBindingForProperties(TransitiveProperty viewProperty, String possibleCandidates) {
+    possibleCandidates = tabLines(true, possibleCandidates);
     return new BeanViewException("Found multiple source properties candidates for:\n\t" + viewProperty.toString(true)
-        + "\n\tPlease specify an explicit binding to a source property for this view property.\n"
-        + "Candidates for source properties are:\n" + possibleCandidates);
+        + "\n\tPlease specify an explicit binding to a source property for this view property."
+        + "\n\tCandidates for source properties are:\n" + possibleCandidates);
   }
 
   static BeanViewException reflectiveMethodInvocation(Method method, Exception e) {

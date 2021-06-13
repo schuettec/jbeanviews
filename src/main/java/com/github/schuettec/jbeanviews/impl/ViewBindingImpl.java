@@ -335,10 +335,10 @@ public class ViewBindingImpl implements ViewBinding {
         viewProperty.getPropertyType());
     String conversion = null;
     if (hasFieldConversion()) {
-      conversion = " field conversion function ";
+      conversion = " field conversion function";
     } else {
       if (globalTypeConversion) {
-        conversion = " global conversion function ";
+        conversion = " global conversion function";
       } else {
         conversion = " reference (no conversion).";
       }

@@ -1,4 +1,4 @@
-package com.github.schuettec.jbeanviews.features.ambiguousImplicitBindings;
+package com.github.schuettec.jbeanviews.features.ambiguousImplicitBindings.sameLevelAmbiguity;
 
 import com.github.schuettec.jbeanviews.test.data.leafTypes.Human;
 import com.github.schuettec.jbeanviews.test.data.leafTypes.Person;

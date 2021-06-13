@@ -1,4 +1,4 @@
-package com.github.schuettec.jbeanviews.features.ambiguousImplicitBindings;
+package com.github.schuettec.jbeanviews.features.ambiguousImplicitBindings.sameLevelAmbiguity;
 
 public class AmbiguousView {
   private String name;

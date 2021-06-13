@@ -30,4 +30,9 @@ public interface TransitiveProperty {
 
   String toString(boolean detailed);
 
+  /**
+   * @return Returns the level of nesting for this property.
+   */
+  int getLevel();
+
 }

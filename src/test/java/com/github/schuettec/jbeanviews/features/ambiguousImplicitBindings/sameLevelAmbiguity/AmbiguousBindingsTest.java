@@ -1,4 +1,4 @@
-package com.github.schuettec.jbeanviews.features.ambiguousImplicitBindings;
+package com.github.schuettec.jbeanviews.features.ambiguousImplicitBindings.sameLevelAmbiguity;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,15 +14,15 @@ public class AmbiguousBindingsTest {
   public void shouldHandleAmbiguousBindings() {
     BeanView<Source, AmbiguousView> ambiguousView = BeanViews.of(Source.class)
         .toView(AmbiguousView.class)
-        .bind(AmbiguousView::getForename)
-        .to(human -> {
-          return human //
-              .getHuman()
-              .getForename();
-        })
-        .bind(AmbiguousView::getName)
-        .to(human -> human.getHuman()
-            .getName())
+        // .bind(AmbiguousView::getForename)
+        // .to(human -> {
+        // return human //
+        // .getHuman()
+        // .getForename();
+        // })
+        // .bind(AmbiguousView::getName)
+        // .to(human -> human.getHuman()
+        // .getName())
         .get();
 
     Source source = Samples.Default.of(Source.class)
