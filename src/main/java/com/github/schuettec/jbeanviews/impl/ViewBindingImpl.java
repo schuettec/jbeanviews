@@ -376,4 +376,9 @@ public class ViewBindingImpl implements ViewBinding {
     return this.sourceProperty;
   }
 
+  @Override
+  public boolean isAutoConversion() {
+    return this.autoConvert;
+  }
+
 }

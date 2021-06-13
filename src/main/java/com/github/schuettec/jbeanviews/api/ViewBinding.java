@@ -13,6 +13,8 @@ public interface ViewBinding {
 
   boolean isCollectionAttribute();
 
+  boolean isAutoConversion();
+
   boolean hasFieldConversion();
 
   String getViewPath();

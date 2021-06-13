@@ -73,4 +73,9 @@ public class OmitViewBindingImpl implements ViewBinding {
     return "Omitting view property " + viewProperty.toString(true);
   }
 
+  @Override
+  public boolean isAutoConversion() {
+    return false;
+  }
+
 }
