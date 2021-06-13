@@ -57,4 +57,9 @@ public class AutoTypeConversion<S, V> implements TypeConversion<S, V> {
     return getDestination().equals(type);
   }
 
+  @Override
+  public String toString() {
+    return beanView.toString();
+  }
+
 }
