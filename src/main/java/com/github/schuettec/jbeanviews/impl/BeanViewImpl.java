@@ -26,7 +26,6 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 
 import com.github.schuettec.jbeanviews.api.BeanView;
-import com.github.schuettec.jbeanviews.api.BeanViews;
 import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.TypeConversion;
 import com.github.schuettec.jbeanviews.api.TypeConversionKey;
@@ -275,14 +274,8 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     return new Hashtable<>(viewBindings);
   }
 
-  <T1, T2> void autoGenerateTypeConversion(Class<T1> sourceType, Class<T2> destinationType) {
-    BeanView<T1, T2> beanView = BeanViews.of(sourceType)
-        .toView(destinationType)
-        .get();
-    this.typeConversions.put(new TypeConversionKey<T1, T2>(sourceType, destinationType), TypeConversion.from(sourceType)
-        .toView(destinationType)
-        .applying(beanView::toView)
-        .unidirectional());
+  void addAutoConversion(AutoTypeConversion autoConversion) {
+    this.typeConversions.put(autoConversion.getTypeConversionKey(), autoConversion);
   }
 
   private void validateViewBindings() {

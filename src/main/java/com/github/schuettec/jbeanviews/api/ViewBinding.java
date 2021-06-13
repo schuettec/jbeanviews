@@ -15,6 +15,8 @@ public interface ViewBinding {
 
   boolean isAutoConversion();
 
+  BeanView getAutoConversion();
+
   boolean hasFieldConversion();
 
   String getViewPath();

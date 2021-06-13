@@ -11,8 +11,8 @@ import com.github.schuettec.jbeanviews.api.BeanViewCollectionAttributeBuilder;
 import com.github.schuettec.jbeanviews.api.PropertyPath;
 import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.TypeConversion;
-import com.github.schuettec.jbeanviews.api.TypeConversion.TypeMappingFunctionBuilder;
 import com.github.schuettec.jbeanviews.api.TypeConversionBuilder;
+import com.github.schuettec.jbeanviews.impl.TypeConversionImpl.TypeMappingFunctionBuilder;
 
 public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBuilderWithFunction<S, OO, O, V> {
 

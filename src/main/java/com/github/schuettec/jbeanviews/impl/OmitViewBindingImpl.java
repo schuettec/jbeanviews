@@ -1,5 +1,6 @@
 package com.github.schuettec.jbeanviews.impl;
 
+import com.github.schuettec.jbeanviews.api.BeanView;
 import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.ViewBinding;
 
@@ -76,6 +77,11 @@ public class OmitViewBindingImpl implements ViewBinding {
   @Override
   public boolean isAutoConversion() {
     return false;
+  }
+
+  @Override
+  public BeanView getAutoConversion() {
+    throw new UnsupportedOperationException("An omit binding does not provide an auto-conversion!");
   }
 
 }

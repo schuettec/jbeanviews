@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import com.github.schuettec.jbeanviews.api.BeanView;
+import com.github.schuettec.jbeanviews.api.BeanViews;
 import com.github.schuettec.jbeanviews.api.TransitiveProperty;
 import com.github.schuettec.jbeanviews.api.TypeConversion;
 import com.github.schuettec.jbeanviews.api.ViewBinding;
@@ -25,6 +27,8 @@ public class ViewBindingImpl implements ViewBinding {
   private boolean thisBinding;
   private boolean collectionAttribute;
   private boolean autoConvert;
+  private Class autoConversionSourceType;
+  private Class autoConversionViewType;
 
   public ViewBindingImpl(BeanViewImpl beanView, TransitiveProperty viewProperty, TransitiveProperty sourceProperty,
       TypeConversion typeConversion, boolean collectionAttribute, boolean thisBinding) {
@@ -198,7 +202,7 @@ public class ViewBindingImpl implements ViewBinding {
   }
 
   @SuppressWarnings({
-      "unchecked", "rawtypes"
+      "unchecked"
   })
   Object convertValue(Class<?> sourceType, Object sourceValue, Class<?> destinationType, boolean sourceToView) {
     if (isReferenceMapping(sourceType, destinationType)) {
@@ -260,13 +264,24 @@ public class ViewBindingImpl implements ViewBinding {
       if (!hasFieldConversion() && !beanView.hasTypeConversion(sourceType, destinationType)) {
         // Try to auto-generate view for required type mapping.
         try {
-          beanView.autoGenerateTypeConversion(sourceType, destinationType);
+          AutoTypeConversion<?, ?> autoConversion = autoGenerateTypeConversion(sourceType, destinationType);
+          beanView.addAutoConversion(autoConversion);
           this.autoConvert = true;
+          this.autoConversionSourceType = sourceType;
+          this.autoConversionViewType = destinationType;
         } catch (BeanViewException e) {
           throw BeanViewException.autoViewingBeanFailed(sourceType, destinationType, e);
         }
       }
     }
+  }
+
+  <S, V> AutoTypeConversion<S, V> autoGenerateTypeConversion(Class<S> sourceType, Class<V> destinationType) {
+    BeanView<S, V> beanView = BeanViews.of(sourceType)
+        .toView(destinationType)
+        .get();
+    AutoTypeConversion<S, V> autoTypeConversion = new AutoTypeConversion<S, V>(beanView);
+    return autoTypeConversion;
   }
 
   private static boolean isMap(Class<?> sourceType) {
@@ -379,6 +394,17 @@ public class ViewBindingImpl implements ViewBinding {
   @Override
   public boolean isAutoConversion() {
     return this.autoConvert;
+  }
+
+  @Override
+  public BeanView getAutoConversion() {
+    if (isAutoConversion()) {
+      return ((AutoTypeConversion) beanView.getTypeConversion(autoConversionSourceType, autoConversionViewType))
+          .getBeanView();
+    } else {
+      throw new IllegalStateException("This view binding does not perform an auto-conversion. "
+          + "Please check with isAutoConversion() before calling this method!");
+    }
   }
 
 }
