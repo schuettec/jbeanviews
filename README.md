@@ -98,9 +98,32 @@ This way you get unambiguous mappings.
 # Bindings
 
 The declaration of bindings is very easy:
-- You can bind singular properties like `.bind(ListSizeView::getListSize).to(Customer::getAddresses).map(List::size)`. This example adds a field conversion to the binding to map the list size to the view's property.
-- You can bind plural properties with the following pattern: `.bindCollection(PluralView::getViewCollection).to(PluralSource::getSourceCollection).map(element -> convertListElements(element))`. This time the specified conversion function is applied to the list elements.
-- You can omit view property by using `.omit(View::getViewProperty)`
+
+## Singular properties
+
+You can bind singular properties like
+```
+.bind(ListSizeView::getListSize)
+.to(Customer::getAddresses)
+.map(List::size)
+```
+
+This example adds a field conversion to the binding to map the list size to the view's property.
+
+## Plural properties
+
+You can bind plural properties with the following pattern:
+```
+.bindCollection(PluralView::getViewCollection)
+.to(PluralSource::getSourceCollection)
+.map(element -> convertListElements(element))
+```
+
+This time the specified conversion function is applied to the list elements.
+
+## Omit view properties
+
+You can omit view property by using `.omit(View::getViewProperty)`
 
 # Global and field specific conversion
 
