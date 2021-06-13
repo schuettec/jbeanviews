@@ -129,7 +129,9 @@ You can omit view property by using `.omit(View::getViewProperty)`
 
 You can specify type conversion on a field basis using a binding. The declaration
 ```
-.bind(View::getViewProperty).to(Source::getSourceProperty).map(conversionFunction)
+.bind(View::getViewProperty)
+.to(Source::getSourceProperty)
+.map(conversionFunction)
 ```
 only converts the specified property.
 
