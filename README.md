@@ -71,7 +71,7 @@ Let's say the above mapping from `Customer` to `CustomerView` should work the fo
 - `CustomerView.addresses` should be mapped to the customer's list of addresses because both typed contain exact the same properties, even though the types `AddressView` and `Address` differ.
 - The properties `Customer.number` and `Customer.deleted` should be restructured to a complex type in `CustomerView.metaData`, so they are no root propertis in the view anymore.
 
-Now the fun part: The above mapping can be achieve without code that goes beyond declaration of the types to map:
+**Now the fun part:** The above mapping can be achieve without code that goes beyond declaration of the types to map:
 
 ```
 BeanView<Customer, CustomerView> beanView = BeanViews.of(Customer.class)
@@ -79,7 +79,7 @@ BeanView<Customer, CustomerView> beanView = BeanViews.of(Customer.class)
                                                      .get();
 ```
 
-Why is that even possible?
+**Why is that even possible?**
 
 Bean views are created using a simple guessing rule:
 - If field names have the same name they are candidates for a binding.
