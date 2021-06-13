@@ -1,12 +1,13 @@
 package com.github.schuettec.jbeanviews.impl;
 
-import static com.github.schuettec.jbeanviews.impl.BeanViewException.noSuchBindingFor;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.github.schuettec.jbeanviews.api.PropertyPath;
@@ -37,20 +38,28 @@ class ViewModelImpl<S, V> implements ViewModel<S, V> {
   }
 
   @Override
-  public ViewBinding getViewBindingFor(String viewPropertyPath) {
-    return getBindingByPath(null, viewPropertyPath, false, viewPathToBindings);
+  public Optional<ViewBinding> getViewBindingFor(String viewPropertyPath) {
+    if (viewPathToBindings.containsKey(viewPropertyPath)) {
+      return Optional.of(viewPathToBindings.get(viewPropertyPath));
+    } else {
+      return Optional.empty();
+    }
   }
 
   @Override
-  public ViewBinding getViewBindingFor(PropertyPath<?, V> viewAttribute) {
+  public Optional<ViewBinding> getViewBindingFor(PropertyPath<?, V> viewAttribute) {
     TransitiveProperty property = InvocationSensor.getTransitiveTypedProperty(beanView.getViewType(), viewAttribute);
     String path = property.getPath();
-    return getBindingByPath(property, path, false, viewPathToBindings);
+    return getViewBindingFor(path);
   }
 
   @Override
   public List<ViewBinding> getSourceBindingFor(String sourcePropertyPath) {
-    return getBindingByPath(null, sourcePropertyPath, true, sourcePathToBindings);
+    if (sourcePathToBindings.containsKey(sourcePropertyPath)) {
+      return sourcePathToBindings.get(sourcePropertyPath);
+    } else {
+      return emptyList();
+    }
   }
 
   @Override
@@ -58,16 +67,7 @@ class ViewModelImpl<S, V> implements ViewModel<S, V> {
     TransitiveProperty property = InvocationSensor.getTransitiveTypedProperty(beanView.getSourceType(),
         sourceAttribute);
     String path = property.getPath();
-    return getBindingByPath(property, path, true, sourcePathToBindings);
-  }
-
-  private <BINDING> BINDING getBindingByPath(TransitiveProperty property, String path, boolean source,
-      Map<String, BINDING> bindings) {
-    if (bindings.containsKey(path)) {
-      return bindings.get(path);
-    } else {
-      throw noSuchBindingFor(property, source);
-    }
+    return getSourceBindingFor(path);
   }
 
   @Override

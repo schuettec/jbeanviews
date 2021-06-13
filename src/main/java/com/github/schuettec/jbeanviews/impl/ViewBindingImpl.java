@@ -24,6 +24,7 @@ public class ViewBindingImpl implements ViewBinding {
   protected TypeConversion typeConversion;
   private boolean thisBinding;
   private boolean collectionAttribute;
+  private boolean autoConvert;
 
   public ViewBindingImpl(BeanViewImpl beanView, TransitiveProperty viewProperty, TransitiveProperty sourceProperty,
       TypeConversion typeConversion, boolean collectionAttribute, boolean thisBinding) {
@@ -260,6 +261,7 @@ public class ViewBindingImpl implements ViewBinding {
         // Try to auto-generate view for required type mapping.
         try {
           beanView.autoGenerateTypeConversion(sourceType, destinationType);
+          this.autoConvert = true;
         } catch (BeanViewException e) {
           throw BeanViewException.autoViewingBeanFailed(sourceType, destinationType, e);
         }
@@ -336,12 +338,12 @@ public class ViewBindingImpl implements ViewBinding {
     String conversion = null;
     if (hasFieldConversion()) {
       conversion = " field conversion function";
+    } else if (globalTypeConversion) {
+      conversion = " global conversion function";
+    } else if (autoConvert) {
+      conversion = " auto conversion using implicit mappings";
     } else {
-      if (globalTypeConversion) {
-        conversion = " global conversion function";
-      } else {
-        conversion = " reference (no conversion).";
-      }
+      conversion = " reference (no conversion)";
     }
 
     String attributeType = null;
@@ -354,9 +356,9 @@ public class ViewBindingImpl implements ViewBinding {
     String applyMode = "";
     if (hasFieldConversion() || globalTypeConversion) {
       if (collectionAttribute) {
-        applyMode = " applied on collection elements.";
+        applyMode = " applied on collection elements";
       } else {
-        applyMode = " applied on single value.";
+        applyMode = " applied on single value";
       }
     }
 

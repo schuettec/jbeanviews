@@ -132,7 +132,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
               throw ambiguousBindingForProperties(viewProperty,
                   getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
             } else {
-              TransitiveProperty sourceProperty = candidates.iterator()
+              TransitiveProperty sourceProperty = sameLevelCandidates.iterator()
                   .next();
               return createViewBinding(viewProperty, sourceProperty);
             }

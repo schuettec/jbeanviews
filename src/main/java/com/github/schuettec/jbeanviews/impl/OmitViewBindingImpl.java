@@ -68,4 +68,9 @@ public class OmitViewBindingImpl implements ViewBinding {
     throw new UnsupportedOperationException("An omit view binding cannot perform a conversion!");
   }
 
+  @Override
+  public String toString() {
+    return "Omitting view property " + viewProperty.toString(true);
+  }
+
 }

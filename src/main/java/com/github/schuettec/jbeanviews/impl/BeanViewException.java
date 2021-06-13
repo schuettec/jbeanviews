@@ -1,7 +1,6 @@
 package com.github.schuettec.jbeanviews.impl;
 
 import static com.github.schuettec.jbeanviews.impl.Properties.asString;
-import static java.util.Objects.nonNull;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
@@ -109,15 +108,6 @@ public class BeanViewException extends RuntimeException {
     } else {
       return possibleCandidates;
     }
-  }
-
-  static BeanViewException noSuchBindingFor(TransitiveProperty property, boolean sourceProperty) {
-    String propertyType = sourceProperty ? "source" : "view";
-    String propertyMessage = ".";
-    if (nonNull(property)) {
-      propertyMessage = " " + property.toString(true) + propertyMessage;
-    }
-    return new BeanViewException("No binding found for " + propertyType + propertyMessage);
   }
 
   static BeanViewException ambiguousBindingForProperties(TransitiveProperty viewProperty, String possibleCandidates) {

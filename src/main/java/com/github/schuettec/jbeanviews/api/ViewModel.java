@@ -1,6 +1,7 @@
 package com.github.schuettec.jbeanviews.api;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ViewModel<S, V> {
 
@@ -35,9 +36,9 @@ public interface ViewModel<S, V> {
    */
   boolean isViewPropertyPath(String path);
 
-  ViewBinding getViewBindingFor(PropertyPath<?, V> viewAttribute);
+  Optional<ViewBinding> getViewBindingFor(PropertyPath<?, V> viewAttribute);
 
-  ViewBinding getViewBindingFor(String viewPropertyPath);
+  Optional<ViewBinding> getViewBindingFor(String viewPropertyPath);
 
   List<ViewBinding> getSourceBindingFor(PropertyPath<?, S> sourceAttribute);
 
