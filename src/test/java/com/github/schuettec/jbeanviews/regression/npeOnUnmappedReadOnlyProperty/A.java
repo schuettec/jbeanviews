@@ -1,4 +1,4 @@
-package com.github.schuettec.jbeanviews.features.regression.npeOnUnmappedReadOnlyProperty;
+package com.github.schuettec.jbeanviews.regression.npeOnUnmappedReadOnlyProperty;
 
 public class A {
   private String string;

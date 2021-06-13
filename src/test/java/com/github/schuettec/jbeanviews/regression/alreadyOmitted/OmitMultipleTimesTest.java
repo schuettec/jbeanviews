@@ -1,4 +1,4 @@
-package com.github.schuettec.jbeanviews.features.regression.alreadyOmitted;
+package com.github.schuettec.jbeanviews.regression.alreadyOmitted;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

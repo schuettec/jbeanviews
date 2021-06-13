@@ -1,4 +1,4 @@
-package com.github.schuettec.jbeanviews.features.regression.npeOnUnmappedReadOnlyProperty;
+package com.github.schuettec.jbeanviews.regression.npeOnUnmappedReadOnlyProperty;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
