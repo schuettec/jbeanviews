@@ -5,6 +5,8 @@ public class NestedView {
   private String aView;
   private int aViewLength;
 
+  private String omit;
+
   public NestedView(String aView, int aViewLength) {
     super();
     this.aView = aView;
@@ -13,6 +15,14 @@ public class NestedView {
 
   public NestedView() {
     super();
+  }
+
+  public String getOmit() {
+    return omit;
+  }
+
+  public void setOmit(String omit) {
+    this.omit = omit;
   }
 
   public String getaView() {

@@ -128,8 +128,15 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
           } else if (candidates.size() > 1) {
             Set<TransitiveProperty> sameLevelCandidates = getSameLevelCandidates(viewProperty, candidates);
             if (sameLevelCandidates.isEmpty() || sameLevelCandidates.size() > 1) {
-              throw ambiguousBindingForProperties(viewProperty,
-                  getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
+              Set<TransitiveProperty> sameNameCandidates = getSameNameCandidates(viewProperty, sameLevelCandidates);
+              if (sameNameCandidates.isEmpty() || sameNameCandidates.size() > 1) {
+                throw ambiguousBindingForProperties(viewProperty,
+                    getSourcePropertyCandidatesPresentableMessage(viewPropertyName, sourceProperties));
+              } else {
+                TransitiveProperty sourceProperty = sameNameCandidates.iterator()
+                    .next();
+                return createViewBinding(viewProperty, sourceProperty);
+              }
             } else {
               TransitiveProperty sourceProperty = sameLevelCandidates.iterator()
                   .next();
@@ -144,6 +151,16 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
         .collect(toMap(ViewBinding::getViewPath, Function.identity()));
 
     viewBindings.putAll(implicitViewBindings);
+  }
+
+  private Set<TransitiveProperty> getSameNameCandidates(TransitiveProperty viewProperty,
+      Set<TransitiveProperty> sameLevelCandidates) {
+    String path = viewProperty.getPath();
+    Set<TransitiveProperty> sameNameCandidates = sameLevelCandidates.stream()
+        .filter(property -> property.getPath()
+            .equals(path))
+        .collect(toSet());
+    return sameNameCandidates;
   }
 
   private Set<TransitiveProperty> getSameLevelCandidates(TransitiveProperty viewProperty,

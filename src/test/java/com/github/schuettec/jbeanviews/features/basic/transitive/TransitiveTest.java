@@ -2,6 +2,7 @@ package com.github.schuettec.jbeanviews.features.basic.transitive;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
@@ -35,10 +36,14 @@ public class TransitiveTest {
         .to(src -> src.getA()
             .getB()
             .getCs())
+        .omit(view -> view.getNestedView()
+            .getOmit())
         .get();
 
+    System.out.println(beanView);
+
     Source source = new Source(
-        new A(new B("contentB", asList(new C("dummy1"), new C("dummy2"), new C("dummy3"))), "contentA"));
+        new A(new B("contentB", asList(new C("dummy1"), new C("dummy2"), new C("dummy3"))), "contentA"), "omit");
     View view = beanView.toView(source);
     assertEquals(source.getA()
         .getContentA(), view.getaView());
@@ -65,6 +70,8 @@ public class TransitiveTest {
           .getDummy();
       String actual = c.getDummy();
       assertEquals(expected, actual);
+      assertNull(view.getNestedView()
+          .getOmit());
     }
 
   }
