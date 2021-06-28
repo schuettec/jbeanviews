@@ -106,6 +106,13 @@ public class BeanViewBuilderImpl<S, V> implements BeanViewBuilder<S, V> {
   }
 
   @Override
+  public <SS, VV> BeanViewBuilder<S, V> useBeanView(BeanView<SS, VV> beanView) {
+    AutoTypeConversion<SS, VV> autoTypeConversion = new AutoTypeConversion<>(beanView);
+    this.typeConversions.add(autoTypeConversion);
+    return this;
+  }
+
+  @Override
   public <O> BeanViewAttributeBuilder<S, O, V> bind(PropertyPath<O, V> viewAttribute) {
     TransitiveProperty transitiveTypedProperty = InvocationSensor.getTransitiveTypedProperty(viewType, viewAttribute);
     return new BeanViewAttributeBuilderImpl<S, O, V>(this, transitiveTypedProperty);

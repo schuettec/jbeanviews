@@ -7,6 +7,8 @@ public interface BeanViewBuilder<S, V> {
 
   public BeanViewBuilder<S, V> typeConversion(Function<TypeConversionBuilder, TypeConversion> conversionBuilder);
 
+  public <SS, VV> BeanViewBuilder<S, V> useBeanView(BeanView<SS, VV> beanView);
+
   public <O> BeanViewAttributeBuilder<S, O, V> bind(PropertyPath<O, V> viewAttribute);
 
   public <O> BeanViewCollectionAttributeBuilder<S, O, V> bindCollection(

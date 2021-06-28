@@ -46,6 +46,12 @@ public class BeanViewBuilderWithFunctionImpl<S, OO, O, V> implements BeanViewBui
   }
 
   @Override
+  public <SS, VV> BeanViewBuilder<S, V> useBeanView(BeanView<SS, VV> beanView) {
+    _addBinding();
+    return beanViewBuilder.useBeanView(beanView);
+  }
+
+  @Override
   public <O> BeanViewAttributeBuilder<S, O, V> bind(PropertyPath<O, V> viewAttribute) {
     _addBinding();
     return beanViewBuilder.bind(viewAttribute);
