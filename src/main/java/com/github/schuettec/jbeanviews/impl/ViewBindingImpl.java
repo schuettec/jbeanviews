@@ -277,9 +277,10 @@ public class ViewBindingImpl implements ViewBinding {
   }
 
   <S, V> AutoTypeConversion<S, V> autoGenerateTypeConversion(Class<S> sourceType, Class<V> destinationType) {
-    BeanView<S, V> beanView = BeanViews.of(sourceType)
-        .toView(destinationType)
-        .get();
+    BeanViewBuilderImpl<S, V> beanViewBuilder = (BeanViewBuilderImpl<S, V>) BeanViews.of(sourceType)
+        .toView(destinationType);
+    beanViewBuilder.typeConversions = beanView.getTypeConversions();
+    BeanView<S, V> beanView = beanViewBuilder.get();
     AutoTypeConversion<S, V> autoTypeConversion = new AutoTypeConversion<S, V>(beanView);
     return autoTypeConversion;
   }
@@ -348,8 +349,9 @@ public class ViewBindingImpl implements ViewBinding {
 
   @Override
   public String toString() {
-    boolean globalTypeConversion = beanView.hasTypeConversion(sourceProperty.getPropertyType(),
-        viewProperty.getPropertyType());
+    boolean globalTypeConversion = nonNull(sourceProperty)
+        && beanView.hasTypeConversion(sourceProperty.getPropertyType(), viewProperty.getPropertyType());
+
     String conversion = null;
     if (hasFieldConversion()) {
       conversion = " field conversion function";
@@ -377,8 +379,13 @@ public class ViewBindingImpl implements ViewBinding {
       }
     }
 
-    return attributeType + "view property '" + viewProperty + "' represents " + attributeType.toLowerCase()
-        + "source property '" + sourceProperty + "' mapped by" + conversion + applyMode;
+    if (isThisBinding()) {
+      return attributeType + "view property '" + viewProperty + "' represented by whole source object mapped by"
+          + conversion + applyMode;
+    } else {
+      return attributeType + "view property '" + viewProperty + "' represents " + attributeType.toLowerCase()
+          + "source property '" + sourceProperty + "' mapped by" + conversion + applyMode;
+    }
   }
 
   @Override

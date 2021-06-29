@@ -17,6 +17,7 @@ import static java.util.stream.Collectors.toSet;
 import java.beans.PropertyDescriptor;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   private Class<S> sourceType;
   private Class<V> viewType;
 
-  private Map<TypeConversionKey, TypeConversion> typeConversions = new Hashtable<>();
+  Map<TypeConversionKey, TypeConversion> typeConversions = new Hashtable<>();
 
   private Map<String, ViewBinding> viewBindings = new Hashtable();
 
@@ -72,16 +73,73 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   }
 
   private void createExplicitViewBindings(Set<ViewBindingDeclaration> viewBindings) {
-    this.viewBindings = viewBindings.stream()
-        .map(declaration -> {
-          if (declaration.isOmitViewProperty()) {
-            return new OmitViewBindingImpl(declaration.getViewProperty());
-          } else {
-            return new ViewBindingImpl(this, declaration.getViewProperty(), declaration.getSourceProperty(),
-                declaration.getTypeConversion(), declaration.isCollectionAttribute(), declaration.isThisBinding());
+    this.viewBindings = new Hashtable<>();
+    Iterator<ViewBindingDeclaration> it = viewBindings.iterator();
+    while (it.hasNext()) {
+      ViewBinding binding = null;
+      ViewBindingDeclaration declaration = it.next();
+      TransitiveProperty viewProperty = declaration.getViewProperty();
+      if (declaration.isOmitViewProperty()) {
+        binding = new OmitViewBindingImpl(viewProperty);
+      } else {
+        binding = new ViewBindingImpl(this, viewProperty, declaration.getSourceProperty(),
+            declaration.getTypeConversion(), declaration.isCollectionAttribute(), declaration.isThisBinding());
+      }
+      addViewBinding(binding);
+    }
+  }
+
+  private void addViewBinding(ViewBinding binding) {
+    String viewPath = binding.getViewPath();
+    if (isViewSubPath(viewPath)) {
+      System.out.println("Ich hab wat removed: ");
+      removeAllSubPaths(viewPath);
+    }
+    boolean b = !hasParentBinding(viewPath);
+    if (b) {
+      this.viewBindings.put(viewPath, binding);
+    } else {
+      System.out.println("Ich hab n Mapping nicht hinzugeballert");
+    }
+  }
+
+  /**
+   * Checks if there is already a view binding for a parent type or property. In this case, this view binding must not
+   * be added.
+   *
+   * @param viewPath The view path.
+   * @return Returns <code>true</code> if there is no parent property binding, making this view path obsolete. Returns
+   *         <code>false</code>
+   *         otherwise.
+   *
+   */
+  private boolean hasParentBinding(String viewPath) {
+    return viewBindings.values()
+        .stream()
+        .map(binding -> binding.getViewPath())
+        .filter(anotherViewPath -> {
+          boolean b = Path.startsWith(viewPath, anotherViewPath);
+          if (b) {
+            System.out.println("Hat n vatter");
           }
+          return b;
         })
-        .collect(toMap(ViewBinding::getViewPath, identity()));
+        .findFirst()
+        .isPresent();
+  }
+
+  private void removeAllSubPaths(String viewPath) {
+    this.viewBindings.entrySet()
+        .removeIf(entry -> {
+          String viewPath2 = entry.getValue()
+              .getViewPath();
+          boolean ikRemoveDat = isViewSubPath(viewPath2);
+          if (ikRemoveDat) {
+            System.out.println("Ich hau den hier weg: " + viewPath2);
+            System.out.println("weil der hier kommt: " + viewPath);
+          }
+          return ikRemoveDat;
+        });
   }
 
   private void createImplicitViewBindings() {
@@ -89,6 +147,10 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     // Build type map for source
     Map<String, TransitiveProperty> viewProperties = getPropertiesRecursively(viewType, viewType, null,
         new LinkedList(), Target.VIEW);
+    viewProperties.keySet()
+        .removeIf(path -> {
+          return hasParentBinding(path);
+        });
 
     Map<String, TransitiveProperty> sourceProperties = getPropertiesRecursively(sourceType, sourceType, null,
         new LinkedList(), Target.SOURCE);
@@ -204,11 +266,10 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
           Class<?> propertyType = pd.getPropertyType();
           List<PropertyDescriptor> newReflectivePath = new LinkedList<>(reflectivePath);
           newReflectivePath.add(pd);
+          String newPath = appendPath(path, pd);
           if (isCollection(pd.getPropertyType())) {
-            String newPath = appendPath(path, pd);
             return asList(new TransitivePropertyImpl(rootType, newPath, newReflectivePath));
           } else if (isBean(propertyType)) {
-            String newPath = appendPath(path, pd);
             /*
              * If the bean is part of a type conversion (source for source property, dest for view property),
              * don't add the properties of this bean. Use the bean as property instead.
@@ -222,7 +283,6 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
               return values;
             }
           } else {
-            String newPath = appendPath(path, pd);
             return asList(new TransitivePropertyImpl(rootType, newPath, newReflectivePath));
           }
         })
@@ -324,10 +384,7 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   boolean isViewSubPath(String partialPath) {
     return viewBindings.values()
         .stream()
-        .filter(binding -> binding.getViewPath()
-            .contains(partialPath))
-        .filter(binding -> !binding.getViewPath()
-            .equals(partialPath))
+        .filter(binding -> Path.startsWith(binding.getViewPath(), partialPath))
         .findFirst()
         .isPresent();
   }
@@ -339,6 +396,13 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
             .equals(path))
         .findFirst()
         .isPresent();
+  }
+
+  public Set<TypeConversion> getTypeConversions() {
+    return this.typeConversions.entrySet()
+        .stream()
+        .map(Entry::getValue)
+        .collect(toSet());
   }
 
 }
