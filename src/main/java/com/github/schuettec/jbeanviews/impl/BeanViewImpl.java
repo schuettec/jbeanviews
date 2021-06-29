@@ -92,14 +92,11 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
   private void addViewBinding(ViewBinding binding) {
     String viewPath = binding.getViewPath();
     if (isViewSubPath(viewPath)) {
-      System.out.println("Ich hab wat removed: ");
       removeAllSubPaths(viewPath);
     }
     boolean b = !hasParentBinding(viewPath);
     if (b) {
       this.viewBindings.put(viewPath, binding);
-    } else {
-      System.out.println("Ich hab n Mapping nicht hinzugeballert");
     }
   }
 
@@ -117,29 +114,15 @@ public class BeanViewImpl<S, V> implements BeanView<S, V> {
     return viewBindings.values()
         .stream()
         .map(binding -> binding.getViewPath())
-        .filter(anotherViewPath -> {
-          boolean b = Path.startsWith(viewPath, anotherViewPath);
-          if (b) {
-            System.out.println("Hat n vatter");
-          }
-          return b;
-        })
+        .filter(anotherViewPath -> Path.startsWith(viewPath, anotherViewPath))
         .findFirst()
         .isPresent();
   }
 
   private void removeAllSubPaths(String viewPath) {
     this.viewBindings.entrySet()
-        .removeIf(entry -> {
-          String viewPath2 = entry.getValue()
-              .getViewPath();
-          boolean ikRemoveDat = isViewSubPath(viewPath2);
-          if (ikRemoveDat) {
-            System.out.println("Ich hau den hier weg: " + viewPath2);
-            System.out.println("weil der hier kommt: " + viewPath);
-          }
-          return ikRemoveDat;
-        });
+        .removeIf(entry -> isViewSubPath(entry.getValue()
+            .getViewPath()));
   }
 
   private void createImplicitViewBindings() {
